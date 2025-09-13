@@ -54,21 +54,21 @@ def team_page(team_name):
         return f"Team {team_name} not found!", 404
 
     if request.method == 'POST':
-        # Get temporary lineup from form
-        temp_lineup = request.form.getlist('lineup')
+        temp_lineup_names = request.form.getlist('lineup')
         lineup_date = request.form.get('lineup_date')
 
         if 'confirm' in request.form and lineup_date:
-            # Confirm the lineup: save to confirmed_lineups
+            # Confirm lineup with actual player objects
             if 'confirmed_lineups' not in team:
                 team['confirmed_lineups'] = []
+            lineup_objects = [next(p for p in team['players'] if p['name'] == n) for n in temp_lineup_names if n]
             team['confirmed_lineups'].append({
                 'date': lineup_date,
-                'lineup': temp_lineup.copy()
+                'lineup': lineup_objects
             })
         else:
-            # Just update temporary lineup without confirming
-            team['lineup'] = temp_lineup
+            # Update temporary lineup
+            team['lineup'] = temp_lineup_names
 
         save_teams(teams)
         return redirect(url_for('team_page', team_name=team_name))
