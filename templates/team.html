@@ -5,7 +5,7 @@
     <title>{{ team.name }} - MCchodesFC</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-        h1, h2 { text-align: center; }
+        h1, h2, h3 { text-align: center; }
         table { border-collapse: collapse; width: 80%; margin: 20px auto; background: white; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         th { background-color: #444; color: white; }
@@ -30,8 +30,19 @@
             </a>
             <br>
         {% endfor %}
+        <label for="lineup_date">Date:</label>
+        <input type="date" name="lineup_date">
         <button type="submit">Update Lineup</button>
     </form>
+
+    {% if team.confirmed_lineups %}
+    <h3>Confirmed Lineups</h3>
+    <ul>
+        {% for entry in team.confirmed_lineups %}
+            <li>{{ entry.date }}: {{ entry.lineup|join(', ') }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
 
     <h2>Matches</h2>
     <table>
