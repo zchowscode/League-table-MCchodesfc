@@ -5,10 +5,9 @@ import os
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
-ADMIN_PASSWORD = "your_admin_password"
 REQUESTS_FILE = "requests.json"
 
-# Load requests
+# Create requests file if missing
 if not os.path.exists(REQUESTS_FILE):
     with open(REQUESTS_FILE, "w") as f:
         json.dump([], f)
@@ -23,34 +22,47 @@ def save_requests(data):
 
 # Example in-memory league data
 league = {
-    "Team A": {
+    "Zameer": {
         "matches": [],
-        "lineup": ["Player1","Player2","Player3","Player4","Player5","Player6","Player7","Player8"],
+        "lineup": ["Zameer","Jordan","Fernando","Player4","Player5","Player6","Player7","Player8"],
         "temp_lineup": [],
         "confirmed_lineups": [],
         "players": {
-            "Player1": {"goals":0,"assists":0},
-            "Player2": {"goals":0,"assists":0},
-            "Player3": {"goals":0,"assists":0},
+            "Zameer": {"goals":0,"assists":0},
+            "Jordan": {"goals":0,"assists":0},
+            "Fernando": {"goals":0,"assists":0},
             "Player4": {"goals":0,"assists":0},
             "Player5": {"goals":0,"assists":0},
             "Player6": {"goals":0,"assists":0},
             "Player7": {"goals":0,"assists":0},
             "Player8": {"goals":0,"assists":0},
         }
+    },
+    "Jordan": {
+        "matches": [],
+        "lineup": ["Player1","Player2","Player3","Player4","Player5","Player6","Player7","Player8"],
+        "temp_lineup": [],
+        "confirmed_lineups": [],
+        "players": {f"Player{i}": {"goals":0,"assists":0} for i in range(1,9)}
+    },
+    "Fernando": {
+        "matches": [],
+        "lineup": ["Player1","Player2","Player3","Player4","Player5","Player6","Player7","Player8"],
+        "temp_lineup": [],
+        "confirmed_lineups": [],
+        "players": {f"Player{i}": {"goals":0,"assists":0} for i in range(1,9)}
     }
 }
 
 @app.route("/")
 def league_table():
-    return render_template("league.html", league=league)
+    return render_template("teams.html", league=league)  # main league table
 
 @app.route("/team/<team_name>")
 def team_page(team_name):
     team = league.get(team_name)
     if not team:
         return "Team not found", 404
-    # Ensure temp lineup exists
     if not team.get("temp_lineup"):
         team["temp_lineup"] = team["lineup"].copy()
     return render_template("team.html", team=team)
@@ -84,14 +96,12 @@ def request_lineup(team_name):
     flash("Lineup update request sent!")
     return redirect(url_for("team_page", team_name=team_name))
 
-@app.route("/team/<team_name>/player/<player_name>", methods=["GET", "POST"])
+@app.route("/team/<team_name>/player/<player_name>", methods=["GET","POST"])
 def player_page(team_name, player_name):
     team = league.get(team_name)
     if not team or player_name not in team["players"]:
         return "Player not found", 404
-
     player = team["players"][player_name]
-
     if request.method == "POST":
         user_name = request.form.get("requester")
         goals = request.form.get("goals")
@@ -100,7 +110,7 @@ def player_page(team_name, player_name):
             flash("Please fill out all fields")
             return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
 
-        # Save request
+        # Save request only, admin approval not required yet
         requests = load_requests()
         requests.append({
             "id": len(requests)+1,
@@ -114,65 +124,4 @@ def player_page(team_name, player_name):
         save_requests(requests)
         flash("Player stats update request sent!")
         return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
-
     return render_template("player.html", team=team, player=player)
-
-@app.route("/admin/login", methods=["GET","POST"])
-def admin_login():
-    if request.method == "POST":
-        password = request.form.get("password")
-        if password == ADMIN_PASSWORD:
-            session["admin_logged_in"] = True
-            return redirect(url_for("admin_requests"))
-        else:
-            flash("Incorrect password")
-            return redirect(url_for("admin_login"))
-    return render_template("admin-login.html")
-
-@app.route("/admin/requests")
-def admin_requests():
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
-    requests = load_requests()
-    return render_template("admin-requests.html", requests=requests)
-
-@app.route("/admin/requests/approve/<int:request_id>", methods=["POST"])
-def approve_request(request_id):
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
-    requests = load_requests()
-    req = next((r for r in requests if r["id"]==request_id), None)
-    if not req:
-        flash("Request not found")
-        return redirect(url_for("admin_requests"))
-
-    team = league[req["team"]]
-    if req["type"]=="lineup":
-        team["confirmed_lineups"].append({
-            "date": req["date"],
-            "lineup": req["lineup"]
-        })
-        team["lineup"] = req["lineup"].copy()
-    elif req["type"]=="player_stats":
-        player_name = req["player"]
-        team["players"][player_name]["goals"] = req["goals"]
-        team["players"][player_name]["assists"] = req["assists"]
-
-    # Remove request
-    requests = [r for r in requests if r["id"]!=request_id]
-    save_requests(requests)
-    flash("Request approved!")
-    return redirect(url_for("admin_requests"))
-
-@app.route("/admin/requests/deny/<int:request_id>", methods=["POST"])
-def deny_request(request_id):
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
-    requests = load_requests()
-    requests = [r for r in requests if r["id"]!=request_id]
-    save_requests(requests)
-    flash("Request denied")
-    return redirect(url_for("admin_requests"))
-
-if __name__=="__main__":
-    app.run(debug=True)
