@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 import json
 import os
 
@@ -65,10 +65,15 @@ def team_page(team_name):
         if lineup_date:
             if 'confirmed_lineups' not in team:
                 team['confirmed_lineups'] = []
-            team['confirmed_lineups'].append({
-                'date': lineup_date,
-                'lineup': lineup.copy()
-            })
+            # Prevent duplicate entries for the same date
+            existing = next((cl for cl in team['confirmed_lineups'] if cl['date'] == lineup_date), None)
+            if existing:
+                existing['lineup'] = lineup.copy()
+            else:
+                team['confirmed_lineups'].append({
+                    'date': lineup_date,
+                    'lineup': lineup.copy()
+                })
 
         # Update matches
         for i, match in enumerate(team.get('matches', [])):
@@ -88,12 +93,19 @@ def team_page(team_name):
     return render_template('team.html', team=team)
 
 # Delete a confirmed lineup by date
-@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
-def delete_lineup(team_name, lineup_date):
+@app.route('/team/<team_name>/lineup/delete', methods=['POST'])
+def delete_lineup():
+    team_name = request.form.get('team_name')
+    lineup_date = request.form.get('lineup_date')
+    if not team_name or not lineup_date:
+        return redirect(url_for('league_table'))
+
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
     if team and 'confirmed_lineups' in team:
-        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
+        team['confirmed_lineups'] = [
+            cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date
+        ]
         save_teams(teams)
     return redirect(url_for('team_page', team_name=team_name))
 
