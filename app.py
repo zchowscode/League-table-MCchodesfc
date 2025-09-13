@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 app = Flask(__name__)
 
