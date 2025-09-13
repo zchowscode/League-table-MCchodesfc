@@ -2,93 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ team.name }} - Team Page</title>
+    <title>{{ team.name }} Lineup</title>
     <style>
-        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
-        input[type="text"] { width: 120px; }
-        .lineup-input { width: 150px; }
-        .button { padding: 5px 10px; margin: 2px; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        form {
+            margin: 10px 0;
+            text-align: center;
+        }
+        input[type="text"], input[type="date"] {
+            padding: 5px;
+            margin: 3px;
+            width: 150px;
+        }
+        button {
+            padding: 6px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .lineup-container, .matches-container, .confirmed-lineups-container {
+            margin-bottom: 20px;
+            width: 80%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h1>{{ team.name }} - Team Page</h1>
+    <h1>{{ team.name }} Lineup</h1>
 
-    <h2>Confirmed Lineups</h2>
-    {% if team.confirmed_lineups %}
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Lineup</th>
-                <th>Action</th>
-            </tr>
+    <div class="confirmed-lineups-container">
+        <h2>Confirmed Lineups</h2>
+        {% if team.confirmed_lineups %}
             {% for cl in team.confirmed_lineups %}
-                <tr>
-                    <td>{{ cl.date }}</td>
-                    <td>{{ cl.lineup | join(', ') }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}">
-                            <button type="submit" class="button">Delete</button>
-                        </form>
-                    </td>
-                </tr>
+                <p>Date: {{ cl.date }}<br>
+                   Lineup: {{ cl.lineup | join(', ') }}</p>
+                <form action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}" method="POST">
+                    <button type="submit">Delete</button>
+                </form>
+                <hr>
             {% endfor %}
-        </table>
-    {% else %}
-        <p>No confirmed lineups yet.</p>
-    {% endif %}
+        {% else %}
+            <p>No confirmed lineups yet.</p>
+        {% endif %}
+    </div>
 
-    <h2>Update Temporary Lineup</h2>
-    <form method="POST">
-        <table>
-            <tr>
-                <th>Player Slot</th>
-                <th>Player Name</th>
-            </tr>
+    <div class="lineup-container">
+        <h2>Update Lineup</h2>
+        <form method="POST">
             {% for i in range(8) %}
-                <tr>
-                    <td>Player {{ i + 1 }}</td>
-                    <td><input class="lineup-input" type="text" name="lineup" value="{{ team.lineup[i] if i < team.lineup|length else '' }}"></td>
-                </tr>
+                <input type="text" name="lineup" placeholder="Player {{ i+1 }}" value="{{ team.lineup[i] if i < team.lineup|length else '' }}">
             {% endfor %}
-        </table>
-        <p>
-            Date: <input type="date" name="lineup_date" required>
-        </p>
-        <button type="submit" name="confirm" class="button">Confirm Lineup</button>
-        <button type="submit" class="button">Update Temporary Lineup</button>
-    </form>
+            <br><br>
+            <input type="date" name="lineup_date">
+            <br><br>
+            <button type="submit" name="confirm">Confirm Lineup</button>
+        </form>
+    </div>
 
-    <h2>Matches</h2>
-    {% if team.matches %}
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Opponent</th>
-                <th>Goals</th>
-                <th>Assists</th>
-                <th>Opponent Goals</th>
-            </tr>
-            {% for m in team.matches %}
+    <div class="matches-container">
+        <h2>Matches</h2>
+        {% if team.matches %}
+            <table>
                 <tr>
-                    <td>{{ m.date }}</td>
-                    <td>{{ m.opponent }}</td>
-                    <td>{{ m.goals }}</td>
-                    <td>{{ m.assists }}</td>
-                    <td>{{ m.opponent_goals }}</td>
+                    <th>Date</th>
+                    <th>Opponent</th>
+                    <th>Goals</th>
+                    <th>Assists</th>
+                    <th>Opponent Goals</th>
                 </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No matches recorded.</p>
-    {% endif %}
+                {% for match in team.matches %}
+                <tr>
+                    <td>{{ match.date }}</td>
+                    <td>{{ match.opponent }}</td>
+                    <td>{{ match.goals }}</td>
+                    <td>{{ match.assists }}</td>
+                    <td>{{ match.opponent_goals }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No matches recorded yet.</p>
+        {% endif %}
+    </div>
 
-    <p><a href="{{ url_for('league_table') }}">⬅ Back to League Table</a></p>
-
-    <h2>Player Stats</h2>
-    <ul>
-        {% for player in team.players %}
-            <li><a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a> - Goals: {{ player.goals }}, Assists: {{ player.assists }}</li>
-        {% endfor %}
-    </ul>
+    <a href="{{ url_for('league_table') }}">⬅ Back to League Table</a>
 </body>
 </html>
