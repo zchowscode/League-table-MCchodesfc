@@ -53,12 +53,23 @@
         h2, h3 {
             color: #fff;
         }
+        .flash {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h2>{{ team.name }} - Team Page</h2>
 
-    <!-- Matches Table -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <h3>Matches</h3>
     <table>
         <tr>
@@ -79,18 +90,20 @@
         {% endfor %}
     </table>
 
-    <!-- Lineup Form -->
-    <h3>Update Lineup</h3>
+    <h3>Request Lineup Update</h3>
     <form method="POST">
+        <label>Your Name:</label>
+        <input type="text" name="requester" placeholder="Enter your name" required><br><br>
+
         {% for i in range(8) %}
             <input type="text" name="lineup" value="{{ team.lineup[i] if i < team.lineup|length else '' }}" placeholder="Player {{ i+1 }}"><br>
         {% endfor %}
+
         <label>Date:</label>
-        <input type="date" name="lineup_date"><br>
-        <button type="submit" name="confirm">Confirm Lineup</button>
+        <input type="date" name="lineup_date" required><br>
+        <button type="submit" name="request">Send Request</button>
     </form>
 
-    <!-- Confirmed Lineups -->
     {% if team.confirmed_lineups %}
     <h3>Confirmed Lineups</h3>
     {% for cl in team.confirmed_lineups %}
