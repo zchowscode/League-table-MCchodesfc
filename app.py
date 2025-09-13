@@ -56,7 +56,7 @@ league = {
 
 @app.route("/")
 def league_table():
-    return render_template("teams.html", league=league)  # main league table
+    return render_template("teams.html", league=league)
 
 @app.route("/team/<team_name>")
 def team_page(team_name):
@@ -65,16 +65,18 @@ def team_page(team_name):
         return "Team not found", 404
     if not team.get("temp_lineup"):
         team["temp_lineup"] = team["lineup"].copy()
-    return render_template("team.html", team=team)
+    return render_template("teams.html", team=team)
 
 @app.route("/team/<team_name>/request_lineup", methods=["POST"])
 def request_lineup(team_name):
     team = league.get(team_name)
     if not team:
         return "Team not found", 404
+
     user_name = request.form.get("user_name")
     lineup_date = request.form.get("lineup_date")
     lineup = request.form.getlist("lineup")
+
     if not lineup or not lineup_date or not user_name:
         flash("Please fill out all fields")
         return redirect(url_for("team_page", team_name=team_name))
@@ -101,16 +103,19 @@ def player_page(team_name, player_name):
     team = league.get(team_name)
     if not team or player_name not in team["players"]:
         return "Player not found", 404
+
     player = team["players"][player_name]
+
     if request.method == "POST":
         user_name = request.form.get("requester")
         goals = request.form.get("goals")
         assists = request.form.get("assists")
+
         if not user_name or goals is None or assists is None:
             flash("Please fill out all fields")
             return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
 
-        # Save request only, admin approval not required yet
+        # Save request only
         requests = load_requests()
         requests.append({
             "id": len(requests)+1,
@@ -124,4 +129,8 @@ def player_page(team_name, player_name):
         save_requests(requests)
         flash("Player stats update request sent!")
         return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
+
     return render_template("player.html", team=team, player=player)
+
+if __name__=="__main__":
+    app.run(debug=True)
