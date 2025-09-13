@@ -1,0 +1,15 @@
+[
+    {
+        "name": "MCchodesFC",
+        "wins": 2,
+        "draws": 1,
+        "losses": 1,
+        "goals_for": 5,
+        "goals_against": 3,
+        "lineup": ["Player1", "Player2", "Player3"],
+        "matches": [
+            {"date": "2025-09-01", "opponent": "Team A", "goals": 2, "assists": 1, "opponent_goals": 1},
+            {"date": "2025-09-08", "opponent": "Team B", "goals": 3, "assists": 2, "opponent_goals": 2}
+        ]
+    }
+]
