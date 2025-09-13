@@ -1,10 +1,52 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import json
+import os
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "<h1>I'm alive!</h1>"
+DATA_FILE = 'teams.json'
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+# Load teams from JSON
+def load_teams():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r') as f:
+            return json.load(f)
+    else:
+        return []
+
+# Save teams to JSON
+def save_teams(teams):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(teams, f, indent=4)
+
+# Home page - League Table
+@app.route('/')
+def league_table():
+    teams = load_teams()
+    # Calculate goal difference and points
+    for team in teams:
+        team['goal_difference'] = team['goals_for'] - team['goals_against']
+        team['points'] = team['wins']*3 + team['draws']
+    # Sort by points descending, then goal difference
+    teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
+    return render_template('index.html', teams=teams)
+
+# Team page
+@app.route('/team/<team_name>', methods=['GET', 'POST'])
+def team_page(team_name):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if not team:
+        return f"Team {team_name} not found!", 404
+
+    if request.method == 'POST':
+        # Example: update lineup or stats here
+        lineup = request.form.getlist('lineup')
+        team['lineup'] = lineup
+        save_teams(teams)
+        return redirect(url_for('team_page', team_name=team_name))
+
+    return render_template('team.html', team=team)
+
+if __name__ == '__main__':
+    app.run(debug=True)
