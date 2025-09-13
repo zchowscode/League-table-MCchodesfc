@@ -23,11 +23,9 @@ def save_teams(teams):
 @app.route('/')
 def league_table():
     teams = load_teams()
-    # Calculate goal difference and points
     for team in teams:
         team['goal_difference'] = team['goals_for'] - team['goals_against']
         team['points'] = team['wins']*3 + team['draws']
-    # Sort by points descending, then goal difference
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
     return render_template('index.html', teams=teams)
 
@@ -40,9 +38,22 @@ def team_page(team_name):
         return f"Team {team_name} not found!", 404
 
     if request.method == 'POST':
-        # Example: update lineup or stats here
+        # Update lineup
         lineup = request.form.getlist('lineup')
         team['lineup'] = lineup
+
+        # Update matches
+        for i, match in enumerate(team.get('matches', [])):
+            match['goals'] = int(request.form.get(f'goals_{i}', match['goals']))
+            match['assists'] = int(request.form.get(f'assists_{i}', match['assists']))
+
+        # Recalculate team stats
+        team['wins'] = team.get('wins', 0)
+        team['draws'] = team.get('draws', 0)
+        team['losses'] = team.get('losses', 0)
+        team['goals_for'] = sum(m['goals'] for m in team.get('matches', []))
+        team['goals_against'] = sum(m.get('opponent_goals', 0) for m in team.get('matches', []))
+
         save_teams(teams)
         return redirect(url_for('team_page', team_name=team_name))
 
