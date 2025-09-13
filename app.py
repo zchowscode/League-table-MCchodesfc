@@ -12,7 +12,8 @@ def load_teams():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             return json.load(f)
-    return []
+    else:
+        return []
 
 # Save teams to JSON
 def save_teams(teams):
@@ -29,11 +30,11 @@ def league_table():
 
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
 
+    # Compute top scorer / top assister across all teams
     top_scorer = None
     top_assister = None
     max_goals = -1
     max_assists = -1
-
     for team in teams:
         for player in team.get('players', []):
             if player['goals'] > max_goals:
@@ -43,9 +44,10 @@ def league_table():
                 max_assists = player['assists']
                 top_assister = player['name']
 
-    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
+    return render_template('index.html', teams=teams,
+                           top_scorer=top_scorer, top_assister=top_assister)
 
-# Team page - lineup + matches
+# Team page (lineup + matches)
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -54,11 +56,11 @@ def team_page(team_name):
         return f"Team {team_name} not found!", 404
 
     if request.method == 'POST':
-        # Update lineup
+        # Update temporary lineup
         lineup = request.form.getlist('lineup')
         team['lineup'] = lineup
 
-        # Confirm lineup (button at top)
+        # If confirm button clicked, save the lineup with date
         if request.form.get('confirm_lineup'):
             lineup_date = request.form.get('lineup_date')
             if lineup_date:
@@ -69,7 +71,7 @@ def team_page(team_name):
                     'lineup': lineup.copy()
                 })
 
-        # Update matches stats
+        # Update matches
         for i, match in enumerate(team.get('matches', [])):
             match['goals'] = int(request.form.get(f'goals_{i}', match['goals']))
             match['assists'] = int(request.form.get(f'assists_{i}', match['assists']))
@@ -86,22 +88,17 @@ def team_page(team_name):
 
     return render_template('team.html', team=team)
 
-# Delete a confirmed lineup
-@app.route('/team/<team_name>/lineup/delete', methods=['POST'])
-def delete_lineup():
-    team_name = request.form.get('team_name')
-    lineup_date = request.form.get('lineup_date')
-
+# Delete a confirmed lineup by date
+@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
+def delete_lineup(team_name, lineup_date):
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
-
     if team and 'confirmed_lineups' in team:
         team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
         save_teams(teams)
-
     return redirect(url_for('team_page', team_name=team_name))
 
-# Player page
+# Player page (individual stats)
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
@@ -114,6 +111,7 @@ def player_page(team_name, player_name):
         return f"Player {player_name} not found in {team_name}!", 404
 
     if request.method == 'POST':
+        # Update player stats
         player['goals'] = int(request.form.get('goals', player['goals']))
         player['assists'] = int(request.form.get('assists', player['assists']))
         save_teams(teams)
