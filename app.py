@@ -9,9 +9,8 @@ DATA_FILE = 'teams.json'
 REQUESTS_FILE = 'requests.json'
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# ----------------------------
-# Helper functions
-# ----------------------------
+
+# -------------------- Data Helpers -------------------- #
 def load_teams():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
@@ -28,19 +27,18 @@ def load_requests():
             return json.load(f)
     return []
 
-def save_requests(requests):
+def save_requests(requests_data):
     with open(REQUESTS_FILE, 'w') as f:
-        json.dump(requests, f, indent=4)
+        json.dump(requests_data, f, indent=4)
 
-# ----------------------------
-# Home / League Table
-# ----------------------------
+
+# -------------------- League Table -------------------- #
 @app.route('/')
 def league_table():
     teams = load_teams()
     for team in teams:
         team['goal_difference'] = team['goals_for'] - team['goals_against']
-        team['points'] = team['wins']*3 + team['draws']
+        team['points'] = team['wins'] * 3 + team['draws']
 
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
 
@@ -60,9 +58,8 @@ def league_table():
 
     return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
-# ----------------------------
-# Team Page
-# ----------------------------
+
+# -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -73,7 +70,7 @@ def team_page(team_name):
     if 'temp_lineup' not in team:
         team['temp_lineup'] = []
 
-    if request.method == 'POST' and 'request' in request.form:
+    if request.method == 'POST' and request.form.get('request_type') == 'lineup':
         user_name = request.form.get('user_name')
         lineup_date = request.form.get('lineup_date')
         temp_lineup_names = request.form.getlist('lineup')
@@ -94,13 +91,14 @@ def team_page(team_name):
         }
         requests_data.append(new_request)
         save_requests(requests_data)
+
         flash("Lineup request sent!")
+        return redirect(url_for('team_page', team_name=team_name))
 
     return render_template('team.html', team=team)
 
-# ----------------------------
-# Player Page
-# ----------------------------
+
+# -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
@@ -112,7 +110,7 @@ def player_page(team_name, player_name):
     if not player:
         return f"Player {player_name} not found in {team_name}!", 404
 
-    if request.method == 'POST' and 'request' in request.form:
+    if request.method == 'POST' and request.form.get('request_type') == 'player':
         requester = request.form.get('requester')
         goals = int(request.form.get('goals', player['goals']))
         assists = int(request.form.get('assists', player['assists']))
@@ -131,13 +129,14 @@ def player_page(team_name, player_name):
         }
         requests_data.append(new_request)
         save_requests(requests_data)
+
         flash("Player stats request sent!")
+        return redirect(url_for('player_page', team_name=team_name, player_name=player_name))
 
     return render_template('player.html', team=team, player=player)
 
-# ----------------------------
-# Admin Login
-# ----------------------------
+
+# -------------------- Admin Login -------------------- #
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -149,20 +148,16 @@ def admin_login():
             flash("Wrong password!")
     return render_template('admin_login.html')
 
-# ----------------------------
-# Admin Requests Page
-# ----------------------------
+
+# -------------------- Admin Requests -------------------- #
 @app.route('/admin/requests')
 def admin_requests():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-
     requests_data = load_requests()
     return render_template('admin_requests.html', requests=requests_data)
 
-# ----------------------------
-# Approve / Deny Requests
-# ----------------------------
+
 @app.route('/admin/requests/approve/<int:request_id>', methods=['POST'])
 def approve_request(request_id):
     if not session.get('admin_logged_in'):
@@ -192,9 +187,10 @@ def approve_request(request_id):
         requests_data = [r for r in requests_data if r['id'] != request_id]
         save_requests(requests_data)
         save_teams(teams)
-        flash("Request approved!")
 
+    flash("Request approved!")
     return redirect(url_for('admin_requests'))
+
 
 @app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
 def deny_request(request_id):
@@ -209,12 +205,12 @@ def deny_request(request_id):
     requests_data = load_requests()
     requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
+
     flash("Request denied!")
     return redirect(url_for('admin_requests'))
 
-# ----------------------------
-# Delete confirmed lineup
-# ----------------------------
+
+# -------------------- Delete Lineup -------------------- #
 @app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
 def delete_lineup(team_name, lineup_date):
     teams = load_teams()
@@ -222,11 +218,9 @@ def delete_lineup(team_name, lineup_date):
     if team and 'confirmed_lineups' in team:
         team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
         save_teams(teams)
-        flash("Confirmed lineup deleted!")
+    flash("Confirmed lineup deleted!")
     return redirect(url_for('team_page', team_name=team_name))
 
-# ----------------------------
-# Run app
-# ----------------------------
+
 if __name__ == '__main__':
     app.run(debug=True)
