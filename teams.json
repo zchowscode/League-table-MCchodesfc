@@ -11,5 +11,18 @@
             {"date": "2025-09-01", "opponent": "Team A", "goals": 2, "assists": 1, "opponent_goals": 1},
             {"date": "2025-09-08", "opponent": "Team B", "goals": 3, "assists": 2, "opponent_goals": 2}
         ]
+    },
+    {
+        "name": "Team A",
+        "wins": 1,
+        "draws": 1,
+        "losses": 2,
+        "goals_for": 3,
+        "goals_against": 5,
+        "lineup": ["Player4", "Player5", "Player6"],
+        "matches": [
+            {"date": "2025-09-01", "opponent": "MCchodesFC", "goals": 1, "assists": 0, "opponent_goals": 2},
+            {"date": "2025-09-10", "opponent": "Team B", "goals": 2, "assists": 1, "opponent_goals": 1}
+        ]
     }
 ]
