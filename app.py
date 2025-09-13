@@ -27,10 +27,9 @@ def league_table():
     for team in teams:
         team['goal_difference'] = team['goals_for'] - team['goals_against']
         team['points'] = team['wins']*3 + team['draws']
-
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
 
-    # Compute top scorer / top assister across all teams
+    # Compute top scorer / top assister
     top_scorer = None
     top_assister = None
     max_goals = -1
@@ -44,10 +43,9 @@ def league_table():
                 max_assists = player['assists']
                 top_assister = player['name']
 
-    return render_template('index.html', teams=teams,
-                           top_scorer=top_scorer, top_assister=top_assister)
+    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
-# Team page (lineup + matches)
+# Team page - manage lineup & matches
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -56,32 +54,21 @@ def team_page(team_name):
         return f"Team {team_name} not found!", 404
 
     if request.method == 'POST':
-        # Update temporary lineup
-        lineup = request.form.getlist('lineup')
-        team['lineup'] = lineup
+        # Get temporary lineup from form
+        temp_lineup = request.form.getlist('lineup')
+        lineup_date = request.form.get('lineup_date')
 
-        # If confirm button clicked, save the lineup with date
-        if request.form.get('confirm_lineup'):
-            lineup_date = request.form.get('lineup_date')
-            if lineup_date:
-                if 'confirmed_lineups' not in team:
-                    team['confirmed_lineups'] = []
-                team['confirmed_lineups'].append({
-                    'date': lineup_date,
-                    'lineup': lineup.copy()
-                })
-
-        # Update matches
-        for i, match in enumerate(team.get('matches', [])):
-            match['goals'] = int(request.form.get(f'goals_{i}', match['goals']))
-            match['assists'] = int(request.form.get(f'assists_{i}', match['assists']))
-
-        # Recalculate team stats
-        team['wins'] = team.get('wins', 0)
-        team['draws'] = team.get('draws', 0)
-        team['losses'] = team.get('losses', 0)
-        team['goals_for'] = sum(m['goals'] for m in team.get('matches', []))
-        team['goals_against'] = sum(m.get('opponent_goals', 0) for m in team.get('matches', []))
+        if 'confirm' in request.form and lineup_date:
+            # Confirm the lineup: save to confirmed_lineups
+            if 'confirmed_lineups' not in team:
+                team['confirmed_lineups'] = []
+            team['confirmed_lineups'].append({
+                'date': lineup_date,
+                'lineup': temp_lineup.copy()
+            })
+        else:
+            # Just update temporary lineup without confirming
+            team['lineup'] = temp_lineup
 
         save_teams(teams)
         return redirect(url_for('team_page', team_name=team_name))
@@ -94,11 +81,13 @@ def delete_lineup(team_name, lineup_date):
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
     if team and 'confirmed_lineups' in team:
-        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
+        team['confirmed_lineups'] = [
+            cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date
+        ]
         save_teams(teams)
     return redirect(url_for('team_page', team_name=team_name))
 
-# Player page (individual stats)
+# Player stats page
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
@@ -111,7 +100,6 @@ def player_page(team_name, player_name):
         return f"Player {player_name} not found in {team_name}!", 404
 
     if request.method == 'POST':
-        # Update player stats
         player['goals'] = int(request.form.get('goals', player['goals']))
         player['assists'] = int(request.form.get('assists', player['assists']))
         save_teams(teams)
