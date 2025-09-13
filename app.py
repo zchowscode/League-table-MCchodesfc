@@ -1,27 +1,40 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import json
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or "supersecretkey"
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devkey')
 
 DATA_FILE = 'teams.json'
-ADMIN_PASSWORD = "havertzisthegoat"  # change this to your desired password
+REQUEST_FILE = 'pending_requests.json'
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')  # replace with secure password
 
-# Load teams from JSON
+# --------------------------
+# Helper functions
+# --------------------------
 def load_teams():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             return json.load(f)
-    else:
-        return []
+    return []
 
-# Save teams to JSON
 def save_teams(teams):
     with open(DATA_FILE, 'w') as f:
         json.dump(teams, f, indent=4)
 
-# Home page - League Table
+def load_requests():
+    if os.path.exists(REQUEST_FILE):
+        with open(REQUEST_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_requests(requests):
+    with open(REQUEST_FILE, 'w') as f:
+        json.dump(requests, f, indent=4)
+
+# --------------------------
+# League table
+# --------------------------
 @app.route('/')
 def league_table():
     teams = load_teams()
@@ -30,6 +43,7 @@ def league_table():
         team['points'] = team['wins']*3 + team['draws']
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
 
+    # Top scorer / assister
     top_scorer = None
     top_assister = None
     max_goals = -1
@@ -45,7 +59,9 @@ def league_table():
 
     return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
-# Team page - lineup & requests
+# --------------------------
+# Team page (lineup & matches)
+# --------------------------
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -54,48 +70,32 @@ def team_page(team_name):
         return f"Team {team_name} not found!", 404
 
     if request.method == 'POST':
-        temp_lineup_names = request.form.getlist('lineup')
-        lineup_date = request.form.get('lineup_date')
         requester = request.form.get('requester')
+        temp_lineup = request.form.getlist('lineup')
+        lineup_date = request.form.get('lineup_date')
 
-        # Submit a request
-        if 'request_update' in request.form and requester:
-            if 'pending_requests' not in team:
-                team['pending_requests'] = []
-            team['pending_requests'].append({
-                'type': 'lineup',
-                'lineup': temp_lineup_names,
-                'date': lineup_date,
-                'user': requester
-            })
-            save_teams(teams)
+        if not requester:
+            flash('Please enter your name to submit a request.', 'error')
             return redirect(url_for('team_page', team_name=team_name))
 
-        # Confirm lineup directly (admin)
-        if 'confirm' in request.form and lineup_date:
-            if 'confirmed_lineups' not in team:
-                team['confirmed_lineups'] = []
-            lineup_objects = [next(p for p in team['players'] if p['name'] == n) for n in temp_lineup_names if n]
-            team['confirmed_lineups'].append({
-                'date': lineup_date,
-                'lineup': lineup_objects
-            })
-            save_teams(teams)
-            return redirect(url_for('team_page', team_name=team_name))
+        # Save request instead of updating immediately
+        pending_requests = load_requests()
+        pending_requests.append({
+            'type': 'lineup',
+            'team': team_name,
+            'lineup': temp_lineup,
+            'date': lineup_date,
+            'requester': requester
+        })
+        save_requests(pending_requests)
+        flash('Your lineup request has been sent!', 'success')
+        return redirect(url_for('team_page', team_name=team_name))
 
     return render_template('team.html', team=team)
 
-# Delete a confirmed lineup by date
-@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
-def delete_lineup(team_name, lineup_date):
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
-    if team and 'confirmed_lineups' in team:
-        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
-        save_teams(teams)
-    return redirect(url_for('team_page', team_name=team_name))
-
-# Player stats page
+# --------------------------
+# Player page (stats update requests)
+# --------------------------
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
@@ -108,14 +108,33 @@ def player_page(team_name, player_name):
         return f"Player {player_name} not found in {team_name}!", 404
 
     if request.method == 'POST':
-        player['goals'] = int(request.form.get('goals', player['goals']))
-        player['assists'] = int(request.form.get('assists', player['assists']))
-        save_teams(teams)
+        requester = request.form.get('requester')
+        if not requester:
+            flash('Please enter your name to submit a request.', 'error')
+            return redirect(url_for('player_page', team_name=team_name, player_name=player_name))
+
+        goals = request.form.get('goals')
+        assists = request.form.get('assists')
+
+        # Save request
+        pending_requests = load_requests()
+        pending_requests.append({
+            'type': 'player_stats',
+            'team': team_name,
+            'player': player_name,
+            'goals': goals,
+            'assists': assists,
+            'requester': requester
+        })
+        save_requests(pending_requests)
+        flash('Your player stats request has been sent!', 'success')
         return redirect(url_for('player_page', team_name=team_name, player_name=player_name))
 
     return render_template('player.html', team=team, player=player)
 
+# --------------------------
 # Admin login
+# --------------------------
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -124,57 +143,61 @@ def admin_login():
             session['admin_logged_in'] = True
             return redirect(url_for('admin_requests'))
         else:
-            return render_template('admin_login.html', error="Incorrect password")
+            flash('Incorrect password', 'error')
     return render_template('admin_login.html')
 
+# --------------------------
+# Admin view pending requests
+# --------------------------
+@app.route('/admin/requests', methods=['GET', 'POST'])
+def admin_requests():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    requests_list = load_requests()
+
+    # Approve or deny
+    if request.method == 'POST':
+        action = request.form.get('action')
+        index = int(request.form.get('index'))
+
+        teams = load_teams()
+
+        req = requests_list.pop(index)
+        if action == 'approve':
+            if req['type'] == 'lineup':
+                team = next((t for t in teams if t['name'] == req['team']), None)
+                if team:
+                    lineup_objects = [next(p for p in team['players'] if p['name'] == n) for n in req['lineup'] if n]
+                    if 'confirmed_lineups' not in team:
+                        team['confirmed_lineups'] = []
+                    team['confirmed_lineups'].append({
+                        'date': req['date'],
+                        'lineup': lineup_objects
+                    })
+            elif req['type'] == 'player_stats':
+                team = next((t for t in teams if t['name'] == req['team']), None)
+                if team:
+                    player = next((p for p in team.get('players', []) if p['name'] == req['player']), None)
+                    if player:
+                        player['goals'] = int(req['goals'])
+                        player['assists'] = int(req['assists'])
+
+            save_teams(teams)
+
+        save_requests(requests_list)
+        return redirect(url_for('admin_requests'))
+
+    return render_template('admin_requests.html', requests=requests_list)
+
+# --------------------------
 # Admin logout
+# --------------------------
 @app.route('/admin/logout')
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('league_table'))
 
-# Admin pending requests
-@app.route('/admin/requests')
-def admin_requests():
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-    teams = load_teams()
-    pending = []
-    for team in teams:
-        for req in team.get('pending_requests', []):
-            req_copy = req.copy()
-            req_copy['team'] = team['name']
-            pending.append(req_copy)
-    return render_template('admin_requests.html', pending=pending)
-
-# Approve request
-@app.route('/admin/request/approve/<team_name>/<int:req_index>', methods=['POST'])
-def approve_request(team_name, req_index):
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
-    if team and 'pending_requests' in team and 0 <= req_index < len(team['pending_requests']):
-        req = team['pending_requests'].pop(req_index)
-        if req['type'] == 'lineup':
-            if 'confirmed_lineups' not in team:
-                team['confirmed_lineups'] = []
-            lineup_objects = [next(p for p in team['players'] if p['name'] == n) for n in req['lineup'] if n]
-            team['confirmed_lineups'].append({'date': req['date'], 'lineup': lineup_objects})
-        save_teams(teams)
-    return redirect(url_for('admin_requests'))
-
-# Deny request
-@app.route('/admin/request/deny/<team_name>/<int:req_index>', methods=['POST'])
-def deny_request(team_name, req_index):
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
-    if team and 'pending_requests' in team and 0 <= req_index < len(team['pending_requests']):
-        team['pending_requests'].pop(req_index)
-        save_teams(teams)
-    return redirect(url_for('admin_requests'))
-
+# --------------------------
 if __name__ == '__main__':
     app.run(debug=True)
