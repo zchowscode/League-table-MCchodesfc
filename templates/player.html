@@ -10,7 +10,10 @@
             background-color: #2f2f2f;
             color: #eee;
         }
-        h1, h2 { text-align: center; color: #fff; }
+        h1, h2 {
+            text-align: center;
+            color: #fff;
+        }
         table {
             border-collapse: collapse;
             width: 50%;
@@ -23,7 +26,9 @@
             padding: 10px;
             text-align: center;
         }
-        th { background-color: #444; }
+        th {
+            background-color: #444;
+        }
         input[type="number"], input[type="text"] {
             width: 60px;
             padding: 5px;
@@ -43,9 +48,29 @@
             border-radius: 3px;
             cursor: pointer;
         }
-        button:hover { background-color: #888; }
-        .back { display: block; text-align: center; margin-top: 20px; }
-        .flash { color: #4CAF50; text-align: center; margin-bottom: 10px; }
+        button:hover {
+            background-color: #888;
+        }
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #80dfff;
+            text-decoration: none;
+        }
+        .back:hover {
+            text-decoration: underline;
+        }
+        .flash {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -78,6 +103,7 @@
                 <td><input type="number" name="assists" value="{{ player.assists }}" min="0"></td>
             </tr>
         </table>
+
         <button type="submit" name="request">Send Stat Update Request</button>
     </form>
 
