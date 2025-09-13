@@ -87,6 +87,16 @@ def team_page(team_name):
 
     return render_template('team.html', team=team)
 
+# Delete a confirmed lineup by date
+@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
+def delete_lineup(team_name, lineup_date):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if team and 'confirmed_lineups' in team:
+        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
+        save_teams(teams)
+    return redirect(url_for('team_page', team_name=team_name))
+
 # Player page (individual stats)
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
