@@ -10,33 +10,16 @@
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         th { background-color: #444; color: white; }
         tr:nth-child(even) { background: #f2f2f2; }
-        input { width: 150px; padding: 5px; }
+        input { width: 150px; padding: 5px; margin-bottom: 5px; }
         button { padding: 6px 12px; margin-top: 10px; }
-        .lineup { text-align: center; margin: 20px; }
-        .lineup a { display: block; margin: 5px; text-decoration: none; color: blue; }
-        .lineup a:hover { text-decoration: underline; }
+        .lineup-form { text-align: center; margin: 20px; }
+        .lineup-form a { display: block; margin: 5px; text-decoration: none; color: blue; }
+        .lineup-form a:hover { text-decoration: underline; }
         .back { display: block; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>{{ team.name }}</h1>
-
-    <h2>Update Lineup</h2>
-    <form method="POST" class="lineup">
-        {% for i in range(8) %}
-            <input type="text" name="lineup" value="{{ team.lineup[i] if i < team.lineup|length else '' }}">
-            {% if i < team.lineup|length %}
-                <a href="{{ url_for('player_page', team_name=team.name, player_name=team.lineup[i]) }}">
-                    View {{ team.lineup[i] }}'s Stats
-                </a>
-            {% endif %}
-            <br>
-        {% endfor %}
-        <label>Date:</label>
-        <input type="text" name="lineup_date" placeholder="mm/dd/yyyy">
-        <br>
-        <button type="submit">Confirm Lineup</button>
-    </form>
 
     <h2>Matches</h2>
     <table>
@@ -61,6 +44,37 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {% if team.confirmed_lineups %}
+        <h2>Confirmed Lineups</h2>
+        {% for lineup in team.confirmed_lineups %}
+            <div style="text-align: center; margin-bottom: 10px;">
+                <strong>Date:</strong> {{ lineup.date }}<br>
+                <strong>Lineup:</strong> {{ lineup.lineup | join(', ') }}
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="delete_lineup_date" value="{{ lineup.date }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2>Update Lineup</h2>
+    <form method="POST" class="lineup-form">
+        {% for i in range(8) %}
+            <input type="text" name="lineup" value="{{ team.lineup[i] if team.lineup|length > i else '' }}" placeholder="Player {{ i+1 }}">
+            {% if team.lineup|length > i and team.lineup[i] != '' %}
+                <a href="{{ url_for('player_page', team_name=team.name, player_name=team.lineup[i]) }}">
+                    View {{ team.lineup[i] }}'s Stats
+                </a>
+            {% endif %}
+            <br>
+        {% endfor %}
+        <label>Date:</label>
+        <input type="date" name="lineup_date">
+        <br>
+        <button type="submit">Confirm Lineup</button>
+    </form>
 
     <a class="back" href="/">⬅ Back to League Table</a>
 </body>
