@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>League Table</title>
+    <style>
+        body {
+            background-color: #2f2f2f;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 80%;
+            margin: 0 auto 30px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #444;
+        }
+        tr:nth-child(even) {
+            background-color: #3a3a3a;
+        }
+        tr:nth-child(odd) {
+            background-color: #333;
+        }
+        a {
+            color: #80dfff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>League Table</h1>
+    <table>
+        <tr>
+            <th>Team</th>
+            <th>Matches Played</th>
+            <th>Wins</th>
+            <th>Draws</th>
+            <th>Losses</th>
+            <th>Goals For</th>
+            <th>Goals Against</th>
+            <th>Points</th>
+        </tr>
+        {% for team in league %}
+        <tr>
+            <td><a href="{{ url_for('team_page', team_name=team.name) }}">{{ team.name }}</a></td>
+            <td>{{ team.matches_played }}</td>
+            <td>{{ team.wins }}</td>
+            <td>{{ team.draws }}</td>
+            <td>{{ team.losses }}</td>
+            <td>{{ team.goals_for }}</td>
+            <td>{{ team.goals_against }}</td>
+            <td>{{ team.points }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
