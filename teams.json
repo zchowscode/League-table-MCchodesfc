@@ -1,44 +1,189 @@
 [
     {
-        "name": "Team Alpha",
-        "wins": 2,
-        "draws": 1,
+        "name": "Diego",
+        "wins": 0,
+        "draws": 0,
         "losses": 0,
-        "goals_for": 6,
-        "goals_against": 2,
-        "lineup": ["Zameer", "Diego", "Fernando", "Jon Jon", "Jordan", "Little Josh"],
-        "matches": [
-            {"date": "2025-09-01", "opponent": "Team Beta", "goals": 3, "assists": 1, "opponent_goals": 1},
-            {"date": "2025-09-08", "opponent": "Team Beta", "goals": 3, "assists": 2, "opponent_goals": 1}
-        ],
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Diego", "", "", "", "", ""],
+        "matches": [],
         "players": [
-            {"name": "Zameer", "goals": 2, "assists": 1},
-            {"name": "Diego", "goals": 1, "assists": 1},
-            {"name": "Fernando", "goals": 1, "assists": 0},
-            {"name": "Jon Jon", "goals": 1, "assists": 0},
-            {"name": "Jordan", "goals": 1, "assists": 0},
-            {"name": "Little Josh", "goals": 0, "assists": 0}
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
         ]
     },
     {
-        "name": "Team Beta",
-        "wins": 1,
+        "name": "Fernando",
+        "wins": 0,
         "draws": 0,
-        "losses": 2,
-        "goals_for": 3,
-        "goals_against": 6,
-        "lineup": ["Noah", "David", "Zach", "Player10", "Player11", "Player12"],
-        "matches": [
-            {"date": "2025-09-01", "opponent": "Team Alpha", "goals": 1, "assists": 0, "opponent_goals": 3},
-            {"date": "2025-09-08", "opponent": "Team Alpha", "goals": 2, "assists": 1, "opponent_goals": 3}
-        ],
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Fernando", "", "", "", "", ""],
+        "matches": [],
         "players": [
-            {"name": "Noah", "goals": 1, "assists": 0},
-            {"name": "David", "goals": 1, "assists": 1},
-            {"name": "Zach", "goals": 1, "assists": 0},
-            {"name": "Player10", "goals": 0, "assists": 0},
-            {"name": "Player11", "goals": 0, "assists": 0},
-            {"name": "Player12", "goals": 0, "assists": 0}
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
         ]
-    }
-]
+    },
+    {
+        "name": "Jon Jon",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Jon Jon", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "Jordan",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Jordan", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "Jose Marban",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Jose Marban", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "Josh G",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Josh G", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "Noah",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Noah", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "David",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["David", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "David", "goals": 0, "assists": 0},
+            {"name": "Zach", "goals": 0, "assists": 0},
+            {"name": "Zameer", "goals": 0, "assists": 0},
+            {"name": "Diego", "goals": 0, "assists": 0},
+            {"name": "Fernando", "goals": 0, "assists": 0},
+            {"name": "Jon Jon", "goals": 0, "assists": 0},
+            {"name": "Jordan", "goals": 0, "assists": 0},
+            {"name": "Jose Marban", "goals": 0, "assists": 0},
+            {"name": "Josh G", "goals": 0, "assists": 0}
+        ]
+    },
+    {
+        "name": "Zach",
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "goals_for": 0,
+        "goals_against": 0,
+        "lineup": ["Zach", "", "", "", "", ""],
+        "matches": [],
+        "players": [
+            {"name": "Noah", "goals": 0, "assists": 0},
+            {"name": "
