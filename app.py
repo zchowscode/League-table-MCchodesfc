@@ -41,16 +41,18 @@ league = {
     }
 }
 
+# ------------------- ROUTES -------------------
+
 @app.route("/")
 def league_table():
-    return render_template("league.html", league=league)
+    """Main page showing all teams"""
+    return render_template("teams.html", league=league)  # Revert to your original template
 
 @app.route("/team/<team_name>")
 def team_page(team_name):
     team = league.get(team_name)
     if not team:
         return "Team not found", 404
-    # Ensure temp lineup exists
     if not team.get("temp_lineup"):
         team["temp_lineup"] = team["lineup"].copy()
     return render_template("team.html", team=team)
@@ -60,17 +62,17 @@ def request_lineup(team_name):
     team = league.get(team_name)
     if not team:
         return "Team not found", 404
+
     user_name = request.form.get("user_name")
     lineup_date = request.form.get("lineup_date")
     lineup = request.form.getlist("lineup")
+
     if not lineup or not lineup_date or not user_name:
         flash("Please fill out all fields")
         return redirect(url_for("team_page", team_name=team_name))
 
-    # Save temp lineup
     team["temp_lineup"] = lineup.copy()
 
-    # Save request
     requests = load_requests()
     requests.append({
         "id": len(requests)+1,
@@ -84,7 +86,7 @@ def request_lineup(team_name):
     flash("Lineup update request sent!")
     return redirect(url_for("team_page", team_name=team_name))
 
-@app.route("/team/<team_name>/player/<player_name>", methods=["GET", "POST"])
+@app.route("/team/<team_name>/player/<player_name>", methods=["GET","POST"])
 def player_page(team_name, player_name):
     team = league.get(team_name)
     if not team or player_name not in team["players"]:
@@ -100,7 +102,6 @@ def player_page(team_name, player_name):
             flash("Please fill out all fields")
             return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
 
-        # Save request
         requests = load_requests()
         requests.append({
             "id": len(requests)+1,
@@ -116,6 +117,8 @@ def player_page(team_name, player_name):
         return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
 
     return render_template("player.html", team=team, player=player)
+
+# ------------------- ADMIN -------------------
 
 @app.route("/admin/login", methods=["GET","POST"])
 def admin_login():
@@ -158,7 +161,6 @@ def approve_request(request_id):
         team["players"][player_name]["goals"] = req["goals"]
         team["players"][player_name]["assists"] = req["assists"]
 
-    # Remove request
     requests = [r for r in requests if r["id"]!=request_id]
     save_requests(requests)
     flash("Request approved!")
