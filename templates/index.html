@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <title>League Table - MCchodesFC</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        a { text-decoration: none; color: blue; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+        h1 { text-align: center; }
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; background: white; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background-color: #444; color: white; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        a { color: blue; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -27,19 +30,18 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Example row -->
+            {% for team in teams %}
             <tr>
-                <td>1</td>
-                <td><a href="/team/TeamA">Team A</a></td>
-                <td>10</td>
-                <td>7</td>
-                <td>2</td>
-                <td>1</td>
-                <td>23</td>
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('team_page', team_name=team.name) }}">{{ team.name }}</a></td>
+                <td>{{ team.wins + team.draws + team.losses }}</td>
+                <td>{{ team.wins }}</td>
+                <td>{{ team.draws }}</td>
+                <td>{{ team.losses }}</td>
+                <td>{{ team.points }}</td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
-
-    <p>Click on a team to see lineups and stats per match.</p>
 </body>
 </html>
