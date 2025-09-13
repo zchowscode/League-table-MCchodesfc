@@ -27,8 +27,25 @@ def league_table():
     for team in teams:
         team['goal_difference'] = team['goals_for'] - team['goals_against']
         team['points'] = team['wins']*3 + team['draws']
+
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
-    return render_template('index.html', teams=teams)
+
+    # Compute top scorer / top assister across all teams
+    top_scorer = None
+    top_assister = None
+    max_goals = -1
+    max_assists = -1
+    for team in teams:
+        for player in team.get('players', []):
+            if player['goals'] > max_goals:
+                max_goals = player['goals']
+                top_scorer = player['name']
+            if player['assists'] > max_assists:
+                max_assists = player['assists']
+                top_assister = player['name']
+
+    return render_template('index.html', teams=teams,
+                           top_scorer=top_scorer, top_assister=top_assister)
 
 # Team page (lineup + matches)
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
@@ -42,6 +59,16 @@ def team_page(team_name):
         # Update lineup
         lineup = request.form.getlist('lineup')
         team['lineup'] = lineup
+
+        # If a date is provided, save confirmed lineup
+        lineup_date = request.form.get('lineup_date')
+        if lineup_date:
+            if 'confirmed_lineups' not in team:
+                team['confirmed_lineups'] = []
+            team['confirmed_lineups'].append({
+                'date': lineup_date,
+                'lineup': lineup.copy()
+            })
 
         # Update matches
         for i, match in enumerate(team.get('matches', [])):
