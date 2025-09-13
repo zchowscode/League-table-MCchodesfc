@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submit Update Request</title>
+    <style>
+        body {
+            background-color: #2c2c2c;
+            color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            background-color: #3a3a3a;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"], input[type="number"], input[type="date"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #444;
+            color: #f0f0f0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Submit Update Request</h1>
+    <form action="{{ url_for('submit_request') }}" method="POST">
+        <label for="team">Team:</label>
+        <select name="team" id="team" required>
+            {% for team in teams %}
+            <option value="{{ team.name }}">{{ team.name }}</option>
+            {% endfor %}
+        </select>
 
+        <label for="type">Request Type:</label>
+        <select name="type" id="type" required>
+            <option value="lineup">Lineup</option>
+            <option value="player_stats">Player Stats</option>
+        </select>
+
+        <label for="player">Player (if updating stats):</label>
+        <input type="text" name="player" id="player" placeholder="Player name">
+
+        <label for="lineup_date">Lineup Date (if lineup):</label>
+        <input type="date" name="lineup_date" id="lineup_date">
+
+        <label for="lineup">Lineup Players (comma separated, if lineup):</label>
+        <input type="text" name="lineup" id="lineup" placeholder="Player1, Player2, Player3">
+
+        <label for="goals">Goals (if updating stats):</label>
+        <input type="number" name="goals" id="goals" min="0">
+
+        <label for="assists">Assists (if updating stats):</label>
+        <input type="number" name="assists" id="assists" min="0">
+
+        <label for="user">Your Name:</label>
+        <input type="text" name="user" id="user" required>
+
+        <button type="submit">Submit Requ
