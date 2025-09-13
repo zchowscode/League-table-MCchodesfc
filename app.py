@@ -3,134 +3,216 @@ import json
 import os
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
 
-REQUESTS_FILE = "requests.json"
+DATA_FILE = 'teams.json'
+REQUESTS_FILE = 'requests.json'
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Create requests file if missing
-if not os.path.exists(REQUESTS_FILE):
-    with open(REQUESTS_FILE, "w") as f:
-        json.dump([], f)
+# Load teams
+def load_teams():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r') as f:
+            return json.load(f)
+    return []
 
+# Save teams
+def save_teams(teams):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(teams, f, indent=4)
+
+# Load requests
 def load_requests():
-    with open(REQUESTS_FILE, "r") as f:
-        return json.load(f)
+    if os.path.exists(REQUESTS_FILE):
+        with open(REQUESTS_FILE, 'r') as f:
+            return json.load(f)
+    return []
 
-def save_requests(data):
-    with open(REQUESTS_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+# Save requests
+def save_requests(requests):
+    with open(REQUESTS_FILE, 'w') as f:
+        json.dump(requests, f, indent=4)
 
-# Example in-memory league data
-league = {
-    "Zameer": {
-        "matches": [],
-        "lineup": ["Zameer","Jordan","Fernando","Player4","Player5","Player6","Player7","Player8"],
-        "temp_lineup": [],
-        "confirmed_lineups": [],
-        "players": {
-            "Zameer": {"goals":0,"assists":0},
-            "Jordan": {"goals":0,"assists":0},
-            "Fernando": {"goals":0,"assists":0},
-            "Player4": {"goals":0,"assists":0},
-            "Player5": {"goals":0,"assists":0},
-            "Player6": {"goals":0,"assists":0},
-            "Player7": {"goals":0,"assists":0},
-            "Player8": {"goals":0,"assists":0},
-        }
-    },
-    "Jordan": {
-        "matches": [],
-        "lineup": ["Player1","Player2","Player3","Player4","Player5","Player6","Player7","Player8"],
-        "temp_lineup": [],
-        "confirmed_lineups": [],
-        "players": {f"Player{i}": {"goals":0,"assists":0} for i in range(1,9)}
-    },
-    "Fernando": {
-        "matches": [],
-        "lineup": ["Player1","Player2","Player3","Player4","Player5","Player6","Player7","Player8"],
-        "temp_lineup": [],
-        "confirmed_lineups": [],
-        "players": {f"Player{i}": {"goals":0,"assists":0} for i in range(1,9)}
-    }
-}
-
-@app.route("/")
+# Home / League Table
+@app.route('/')
 def league_table():
-    return render_template("teams.html", league=league)
+    teams = load_teams()
+    for team in teams:
+        team['goal_difference'] = team['goals_for'] - team['goals_against']
+        team['points'] = team['wins']*3 + team['draws']
 
-@app.route("/team/<team_name>")
+    teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
+
+    top_scorer = None
+    top_assister = None
+    max_goals = -1
+    max_assists = -1
+
+    for team in teams:
+        for player in team.get('players', []):
+            if player['goals'] > max_goals:
+                max_goals = player['goals']
+                top_scorer = player['name']
+            if player['assists'] > max_assists:
+                max_assists = player['assists']
+                top_assister = player['name']
+
+    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
+
+# Team Page
+@app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
-    team = league.get(team_name)
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
     if not team:
-        return "Team not found", 404
-    if not team.get("temp_lineup"):
-        team["temp_lineup"] = team["lineup"].copy()
-    return render_template("teams.html", team=team)
+        return f"Team {team_name} not found!", 404
 
-@app.route("/team/<team_name>/request_lineup", methods=["POST"])
-def request_lineup(team_name):
-    team = league.get(team_name)
-    if not team:
-        return "Team not found", 404
+    request_sent = False
 
-    user_name = request.form.get("user_name")
-    lineup_date = request.form.get("lineup_date")
-    lineup = request.form.getlist("lineup")
+    if request.method == 'POST' and 'request' in request.form:
+        user_name = request.form.get('user_name')
+        lineup_date = request.form.get('lineup_date')
+        temp_lineup_names = request.form.getlist('lineup')
 
-    if not lineup or not lineup_date or not user_name:
-        flash("Please fill out all fields")
-        return redirect(url_for("team_page", team_name=team_name))
+        team['temp_lineup'] = temp_lineup_names
 
-    # Save temp lineup
-    team["temp_lineup"] = lineup.copy()
-
-    # Save request
-    requests = load_requests()
-    requests.append({
-        "id": len(requests)+1,
-        "user": user_name,
-        "type": "lineup",
-        "team": team_name,
-        "lineup": lineup,
-        "date": lineup_date
-    })
-    save_requests(requests)
-    flash("Lineup update request sent!")
-    return redirect(url_for("team_page", team_name=team_name))
-
-@app.route("/team/<team_name>/player/<player_name>", methods=["GET","POST"])
-def player_page(team_name, player_name):
-    team = league.get(team_name)
-    if not team or player_name not in team["players"]:
-        return "Player not found", 404
-
-    player = team["players"][player_name]
-
-    if request.method == "POST":
-        user_name = request.form.get("requester")
-        goals = request.form.get("goals")
-        assists = request.form.get("assists")
-
-        if not user_name or goals is None or assists is None:
-            flash("Please fill out all fields")
-            return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
-
-        # Save request only
-        requests = load_requests()
-        requests.append({
-            "id": len(requests)+1,
+        requests_data = load_requests()
+        new_request = {
+            "id": len(requests_data) + 1,
             "user": user_name,
-            "type": "player_stats",
             "team": team_name,
+            "type": "lineup",
+            "lineup": temp_lineup_names,
+            "player": None,
+            "goals": None,
+            "assists": None,
+            "date": lineup_date
+        }
+        requests_data.append(new_request)
+        save_requests(requests_data)
+        request_sent = True
+
+    if 'temp_lineup' not in team:
+        team['temp_lineup'] = []
+
+    return render_template('team.html', team=team, request_sent=request_sent)
+
+# Player Page
+@app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
+def player_page(team_name, player_name):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if not team:
+        return f"Team {team_name} not found!", 404
+
+    player = next((p for p in team.get('players', []) if p['name'] == player_name), None)
+    if not player:
+        return f"Player {player_name} not found in {team_name}!", 404
+
+    request_sent = False
+
+    if request.method == 'POST' and 'request' in request.form:
+        requester = request.form.get('requester')
+        goals = int(request.form.get('goals', player['goals']))
+        assists = int(request.form.get('assists', player['assists']))
+
+        requests_data = load_requests()
+        new_request = {
+            "id": len(requests_data) + 1,
+            "user": requester,
+            "team": team_name,
+            "type": "player",
+            "lineup": None,
             "player": player_name,
-            "goals": int(goals),
-            "assists": int(assists)
-        })
-        save_requests(requests)
-        flash("Player stats update request sent!")
-        return redirect(url_for("player_page", team_name=team_name, player_name=player_name))
+            "goals": goals,
+            "assists": assists,
+            "date": None
+        }
+        requests_data.append(new_request)
+        save_requests(requests_data)
+        request_sent = True
 
-    return render_template("player.html", team=team, player=player)
+    return render_template('player.html', team=team, player=player, request_sent=request_sent)
 
-if __name__=="__main__":
+# Admin Login
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin_requests'))
+        else:
+            flash("Wrong password!")
+    return render_template('admin_login.html')
+
+# Admin Requests Page
+@app.route('/admin/requests')
+def admin_requests():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    requests_data = load_requests()
+    return render_template('admin_requests.html', requests=requests_data)
+
+# Approve Request
+@app.route('/admin/requests/approve/<int:request_id>', methods=['POST'])
+def approve_request(request_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    admin_password = request.form.get('admin_password')
+    if admin_password != ADMIN_PASSWORD:
+        flash("Wrong admin password!")
+        return redirect(url_for('admin_requests'))
+
+    requests_data = load_requests()
+    req = next((r for r in requests_data if r['id'] == request_id), None)
+    if req:
+        teams = load_teams()
+        team = next((t for t in teams if t['name'] == req['team']), None)
+        if req['type'] == 'lineup' and team:
+            if 'confirmed_lineups' not in team:
+                team['confirmed_lineups'] = []
+            lineup_objs = [next(p for p in team['players'] if p['name'] == n) for n in req['lineup'] if n]
+            team['confirmed_lineups'].append({'date': req['date'], 'lineup': lineup_objs})
+        elif req['type'] == 'player' and team:
+            player = next((p for p in team['players'] if p['name'] == req['player']), None)
+            if player:
+                player['goals'] = req['goals']
+                player['assists'] = req['assists']
+
+        requests_data = [r for r in requests_data if r['id'] != request_id]
+        save_requests(requests_data)
+        save_teams(teams)
+
+    return redirect(url_for('admin_requests'))
+
+# Deny Request
+@app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
+def deny_request(request_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    admin_password = request.form.get('admin_password')
+    if admin_password != ADMIN_PASSWORD:
+        flash("Wrong admin password!")
+        return redirect(url_for('admin_requests'))
+
+    requests_data = load_requests()
+    requests_data = [r for r in requests_data if r['id'] != request_id]
+    save_requests(requests_data)
+    return redirect(url_for('admin_requests'))
+
+# Delete confirmed lineup
+@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
+def delete_lineup(team_name, lineup_date):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if team and 'confirmed_lineups' in team:
+        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
+        save_teams(teams)
+    return redirect(url_for('team_page', team_name=team_name))
+
+if __name__ == '__main__':
     app.run(debug=True)
