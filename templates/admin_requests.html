@@ -61,6 +61,7 @@
 <body>
     <h1>Pending Update Requests</h1>
 
+    {% if requests %}
     <table>
         <tr>
             <th>User</th>
@@ -85,17 +86,4 @@
                 {% endif %}
             </td>
             <td>
-                <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST" style="display:inline;">
-                    <input type="password" name="admin_password" placeholder="Admin Password" required>
-                    <button type="submit" class="confirm-btn">Confirm</button>
-                </form>
-                <form action="{{ url_for('deny_request', request_id=req.id) }}" method="POST" style="display:inline;">
-                    <input type="password" name="admin_password" placeholder="Admin Password" required>
-                    <button type="submit" class="deny-btn">Deny</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-</body>
-</html>
+                <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST" s_
