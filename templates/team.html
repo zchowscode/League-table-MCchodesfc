@@ -6,104 +6,93 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 20px;
-            background-color: #f7f7f7;
-        }
-        h1, h2 {
-            text-align: center;
+            margin: 20px;
         }
         table {
             border-collapse: collapse;
             margin: 10px 0;
-            width: 80%;
+            width: 100%;
         }
         th, td {
-            border: 1px solid #ccc;
+            border: 1px solid #000;
             padding: 8px;
-            text-align: center;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
         form {
             margin: 10px 0;
-            text-align: center;
         }
         input[type="text"], input[type="date"] {
             padding: 5px;
             margin: 3px;
-            width: 150px;
         }
         button {
             padding: 6px 12px;
             margin: 5px;
             cursor: pointer;
         }
-        .lineup-container, .matches-container, .confirmed-lineups-container {
-            margin-bottom: 20px;
-            width: 80%;
-            text-align: center;
+        button.delete-btn {
+            background-color: red;
+            color: white;
+        }
+        a {
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
     <h1>{{ team.name }} Lineup</h1>
 
-    <div class="confirmed-lineups-container">
-        <h2>Confirmed Lineups</h2>
-        {% if team.confirmed_lineups %}
-            {% for cl in team.confirmed_lineups %}
-                <p>Date: {{ cl.date }}<br>
-                   Lineup: {{ cl.lineup | join(', ') }}</p>
-                <form action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}" method="POST">
-                    <button type="submit">Delete</button>
-                </form>
-                <hr>
-            {% endfor %}
-        {% else %}
-            <p>No confirmed lineups yet.</p>
-        {% endif %}
-    </div>
+    <h2>Confirmed Lineups</h2>
+    {% if team.confirmed_lineups %}
+        {% for cl in team.confirmed_lineups %}
+            <p>Date: {{ cl.date }}<br>
+               Lineup: {{ cl.lineup | join(', ') }}</p>
+            <form action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}" method="POST">
+                <button type="submit" class="delete-btn">Delete</button>
+            </form>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No confirmed lineups yet.</p>
+    {% endif %}
 
-    <div class="lineup-container">
-        <h2>Update Lineup</h2>
-        <form method="POST">
-            {% for i in range(8) %}
-                <input type="text" name="lineup" placeholder="Player {{ i+1 }}" value="{{ team.lineup[i] if i < team.lineup|length else '' }}">
-            {% endfor %}
-            <br><br>
-            <input type="date" name="lineup_date">
-            <br><br>
-            <button type="submit" name="confirm">Confirm Lineup</button>
-        </form>
-    </div>
+    <h2>Update Lineup</h2>
+    <form method="POST">
+        {% for i in range(8) %}
+            <input type="text" name="lineup" placeholder="Player {{ i+1 }}" value="{{ team.lineup[i] if i < team.lineup|length else '' }}">
+        {% endfor %}
+        <br><br>
+        <input type="date" name="lineup_date">
+        <br><br>
+        <button type="submit" name="confirm">Confirm Lineup</button>
+    </form>
 
-    <div class="matches-container">
-        <h2>Matches</h2>
-        {% if team.matches %}
-            <table>
-                <tr>
-                    <th>Date</th>
-                    <th>Opponent</th>
-                    <th>Goals</th>
-                    <th>Assists</th>
-                    <th>Opponent Goals</th>
-                </tr>
-                {% for match in team.matches %}
-                <tr>
-                    <td>{{ match.date }}</td>
-                    <td>{{ match.opponent }}</td>
-                    <td>{{ match.goals }}</td>
-                    <td>{{ match.assists }}</td>
-                    <td>{{ match.opponent_goals }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>No matches recorded yet.</p>
-        {% endif %}
-    </div>
+    <h2>Matches</h2>
+    {% if team.matches %}
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Opponent</th>
+                <th>Goals</th>
+                <th>Assists</th>
+                <th>Opponent Goals</th>
+            </tr>
+            {% for match in team.matches %}
+            <tr>
+                <td>{{ match.date }}</td>
+                <td>{{ match.opponent }}</td>
+                <td>{{ match.goals }}</td>
+                <td>{{ match.assists }}</td>
+                <td>{{ match.opponent_goals }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No matches recorded yet.</p>
+    {% endif %}
 
     <a href="{{ url_for('league_table') }}">⬅ Back to League Table</a>
 </body>
