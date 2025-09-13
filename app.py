@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
 
-app = Flask(__name__)  # Create Flask app first
+app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 DATA_FILE = 'teams.json'
@@ -30,7 +30,7 @@ def league_table():
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
     return render_template('index.html', teams=teams)
 
-# Team page
+# Team page (lineup + matches)
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -59,6 +59,27 @@ def team_page(team_name):
         return redirect(url_for('team_page', team_name=team_name))
 
     return render_template('team.html', team=team)
+
+# Player page (individual stats)
+@app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
+def player_page(team_name, player_name):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if not team:
+        return f"Team {team_name} not found!", 404
+
+    player = next((p for p in team.get('players', []) if p['name'] == player_name), None)
+    if not player:
+        return f"Player {player_name} not found in {team_name}!", 404
+
+    if request.method == 'POST':
+        # Update player stats
+        player['goals'] = int(request.form.get('goals', player['goals']))
+        player['assists'] = int(request.form.get('assists', player['assists']))
+        save_teams(teams)
+        return redirect(url_for('player_page', team_name=team_name, player_name=player_name))
+
+    return render_template('player.html', team=team, player=player)
 
 if __name__ == '__main__':
     app.run(debug=True)
