@@ -95,8 +95,8 @@
     <!-- Players Section -->
     <h3>Players</h3>
     <div class="player-list">
-        {% for player in team.players %}
-            <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>
+        {% for player_name in team.players.keys() %}
+            <a href="{{ url_for('player_page', team_name=team.name, player_name=player_name) }}">{{ player_name }}</a>
         {% endfor %}
     </div>
 
@@ -107,7 +107,7 @@
         <input type="text" name="user_name" placeholder="Enter your name" required><br><br>
 
         {% for i in range(8) %}
-            <input type="text" name="lineup" value="{{ team.temp_lineup[i] if i < team.temp_lineup|length else '' }}" placeholder="Player {{ i+1 }}"><br>
+            <input type="text" name="lineup" value="{{ team.temp_lineup[i] if i < team.temp_lineup|length else team.lineup[i] }}" placeholder="Player {{ i+1 }}"><br>
         {% endfor %}
 
         <label>Date:</label>
@@ -122,12 +122,10 @@
         <p><strong>Date:</strong> {{ cl.date }}</p>
         <p><strong>Lineup:</strong>
             {% for player in cl.lineup %}
-                <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>{% if not loop.last %}, {% endif %}
+                <a href="{{ url_for('player_page', team_name=team.name, player_name=player) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
             {% endfor %}
         </p>
-        <form method="POST" action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}">
-            <button type="submit">Delete</button>
-        </form>
+        <!-- Optional Delete button if you implement a delete route -->
     {% endfor %}
     {% endif %}
 
