@@ -4,21 +4,31 @@
     <meta charset="UTF-8">
     <title>{{ team.name }} - MCchodesFC</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+        h1, h2 { text-align: center; }
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; background: white; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        input { width: 50px; }
-        button { padding: 4px 8px; }
+        th { background-color: #444; color: white; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        input { width: 150px; padding: 5px; }
+        button { padding: 6px 12px; margin-top: 10px; }
+        .lineup { text-align: center; margin: 20px; }
+        .lineup a { display: block; margin: 5px; text-decoration: none; color: blue; }
+        .lineup a:hover { text-decoration: underline; }
+        .back { display: block; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>{{ team.name }}</h1>
 
     <h2>Lineup</h2>
-    <form method="POST">
+    <form method="POST" class="lineup">
         {% for player in team.lineup %}
-            <input type="text" name="lineup" value="{{ player }}"><br>
+            <input type="text" name="lineup" value="{{ player }}">
+            <a href="{{ url_for('player_page', team_name=team.name, player_name=player) }}">
+                View {{ player }}'s Stats
+            </a>
+            <br>
         {% endfor %}
         <button type="submit">Update Lineup</button>
     </form>
@@ -31,6 +41,7 @@
                 <th>Opponent</th>
                 <th>Goals</th>
                 <th>Assists</th>
+                <th>Opponent Goals</th>
             </tr>
         </thead>
         <tbody>
@@ -40,11 +51,12 @@
                 <td>{{ match.opponent }}</td>
                 <td>{{ match.goals }}</td>
                 <td>{{ match.assists }}</td>
+                <td>{{ match.opponent_goals }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <a href="/">Back to League Table</a>
+    <a class="back" href="/">⬅ Back to League Table</a>
 </body>
 </html>
