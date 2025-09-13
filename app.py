@@ -3,14 +3,12 @@ import json
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or "supersecretkey"
 
 DATA_FILE = 'teams.json'
+ADMIN_PASSWORD = "havertzisthegoat"  # change this to your desired password
 
-# --- ADMIN PASSWORD ---
-ADMIN_PASSWORD = 'yourpassword'  # change this to whatever password you want
-
-# --- Load / Save JSON ---
+# Load teams from JSON
 def load_teams():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
@@ -18,21 +16,20 @@ def load_teams():
     else:
         return []
 
+# Save teams to JSON
 def save_teams(teams):
     with open(DATA_FILE, 'w') as f:
         json.dump(teams, f, indent=4)
 
-# --- League Table ---
+# Home page - League Table
 @app.route('/')
 def league_table():
     teams = load_teams()
     for team in teams:
         team['goal_difference'] = team['goals_for'] - team['goals_against']
         team['points'] = team['wins']*3 + team['draws']
-
     teams = sorted(teams, key=lambda x: (x['points'], x['goal_difference']), reverse=True)
 
-    # Top scorer / assister
     top_scorer = None
     top_assister = None
     max_goals = -1
@@ -48,7 +45,7 @@ def league_table():
 
     return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
-# --- Team Page ---
+# Team page - lineup & requests
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
@@ -59,7 +56,22 @@ def team_page(team_name):
     if request.method == 'POST':
         temp_lineup_names = request.form.getlist('lineup')
         lineup_date = request.form.get('lineup_date')
+        requester = request.form.get('requester')
 
+        # Submit a request
+        if 'request_update' in request.form and requester:
+            if 'pending_requests' not in team:
+                team['pending_requests'] = []
+            team['pending_requests'].append({
+                'type': 'lineup',
+                'lineup': temp_lineup_names,
+                'date': lineup_date,
+                'user': requester
+            })
+            save_teams(teams)
+            return redirect(url_for('team_page', team_name=team_name))
+
+        # Confirm lineup directly (admin)
         if 'confirm' in request.form and lineup_date:
             if 'confirmed_lineups' not in team:
                 team['confirmed_lineups'] = []
@@ -68,15 +80,12 @@ def team_page(team_name):
                 'date': lineup_date,
                 'lineup': lineup_objects
             })
-        else:
-            team['lineup'] = temp_lineup_names
-
-        save_teams(teams)
-        return redirect(url_for('team_page', team_name=team_name))
+            save_teams(teams)
+            return redirect(url_for('team_page', team_name=team_name))
 
     return render_template('team.html', team=team)
 
-# --- Delete Confirmed Lineup ---
+# Delete a confirmed lineup by date
 @app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
 def delete_lineup(team_name, lineup_date):
     teams = load_teams()
@@ -86,7 +95,7 @@ def delete_lineup(team_name, lineup_date):
         save_teams(teams)
     return redirect(url_for('team_page', team_name=team_name))
 
-# --- Player Page ---
+# Player stats page
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
@@ -106,7 +115,7 @@ def player_page(team_name, player_name):
 
     return render_template('player.html', team=team, player=player)
 
-# --- Admin Login ---
+# Admin login
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -116,26 +125,56 @@ def admin_login():
             return redirect(url_for('admin_requests'))
         else:
             return render_template('admin_login.html', error="Incorrect password")
-    return render_template('admin_login.html', error=None)
+    return render_template('admin_login.html')
 
+# Admin logout
 @app.route('/admin/logout')
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('league_table'))
 
-# --- Admin Requests Page ---
+# Admin pending requests
 @app.route('/admin/requests')
 def admin_requests():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    # Load all pending requests
     teams = load_teams()
-    pending_requests = []
+    pending = []
     for team in teams:
-        if 'pending_requests' in team:
-            for req in team['pending_requests']:
-                pending_requests.append({'team': team['name'], **req})
-    return render_template('admin_requests.html', pending_requests=pending_requests)
+        for req in team.get('pending_requests', []):
+            req_copy = req.copy()
+            req_copy['team'] = team['name']
+            pending.append(req_copy)
+    return render_template('admin_requests.html', pending=pending)
+
+# Approve request
+@app.route('/admin/request/approve/<team_name>/<int:req_index>', methods=['POST'])
+def approve_request(team_name, req_index):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if team and 'pending_requests' in team and 0 <= req_index < len(team['pending_requests']):
+        req = team['pending_requests'].pop(req_index)
+        if req['type'] == 'lineup':
+            if 'confirmed_lineups' not in team:
+                team['confirmed_lineups'] = []
+            lineup_objects = [next(p for p in team['players'] if p['name'] == n) for n in req['lineup'] if n]
+            team['confirmed_lineups'].append({'date': req['date'], 'lineup': lineup_objects})
+        save_teams(teams)
+    return redirect(url_for('admin_requests'))
+
+# Deny request
+@app.route('/admin/request/deny/<team_name>/<int:req_index>', methods=['POST'])
+def deny_request(team_name, req_index):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if team and 'pending_requests' in team and 0 <= req_index < len(team['pending_requests']):
+        team['pending_requests'].pop(req_index)
+        save_teams(teams)
+    return redirect(url_for('admin_requests'))
 
 if __name__ == '__main__':
     app.run(debug=True)
