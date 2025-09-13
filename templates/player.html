@@ -88,6 +88,9 @@
     {% endwith %}
 
     <form method="POST">
+        <!-- Hidden input to signal request submission -->
+        <input type="hidden" name="request" value="1">
+
         <label>Your Name:</label>
         <input type="text" name="requester" placeholder="Enter your name" required><br><br>
 
@@ -106,7 +109,7 @@
             </tr>
         </table>
 
-        <button type="submit" name="request">Send Stat Update Request</button>
+        <button type="submit">Send Stat Update Request</button>
     </form>
 
     <a class="back" href="{{ url_for('team_page', team_name=team.name) }}">⬅ Back to {{ team.name }}</a>
