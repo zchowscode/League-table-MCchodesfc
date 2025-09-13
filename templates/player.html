@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ player_name }} - {{ team.name }}</title>
+    <title>{{ player.name }} - {{ team.name }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,7 +74,7 @@
     </style>
 </head>
 <body>
-    <h1>{{ player_name }}</h1>
+    <h1>{{ player.name }}</h1>
     <h2>{{ team.name }}</h2>
 
     {% with messages = get_flashed_messages() %}
@@ -96,11 +96,11 @@
             </tr>
             <tr>
                 <td>Goals</td>
-                <td><input type="number" name="goals" value="{{ team.players[player_name].goals }}" min="0"></td>
+                <td><input type="number" name="goals" value="{{ player.goals }}" min="0"></td>
             </tr>
             <tr>
                 <td>Assists</td>
-                <td><input type="number" name="assists" value="{{ team.players[player_name].assists }}" min="0"></td>
+                <td><input type="number" name="assists" value="{{ player.assists }}" min="0"></td>
             </tr>
         </table>
 
