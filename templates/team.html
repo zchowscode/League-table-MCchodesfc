@@ -85,9 +85,9 @@
         <tr>
             <td>{{ match.date }}</td>
             <td>{{ match.opponent }}</td>
-            <td>{{ match.goals }}</td>
-            <td>{{ match.assists }}</td>
-            <td>{{ match.opponent_goals }}</td>
+            <td>{{ match.goals | default(0) }}</td>
+            <td>{{ match.assists | default(0) }}</td>
+            <td>{{ match.opponent_goals | default(0) }}</td>
         </tr>
         {% endfor %}
     </table>
