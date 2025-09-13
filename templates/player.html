@@ -30,7 +30,7 @@
             background-color: #444;
         }
         input[type="number"], input[type="text"] {
-            width: 60px;
+            width: 80px;
             padding: 5px;
             text-align: center;
             border-radius: 3px;
@@ -87,7 +87,7 @@
 
     <form method="POST">
         <label>Your Name:</label>
-        <input type="text" name="requester" placeholder="Enter your name" required><br><br>
+        <input type="text" name="requester" placeholder="Enter your name" required>
 
         <table>
             <tr>
@@ -96,11 +96,11 @@
             </tr>
             <tr>
                 <td>Goals</td>
-                <td><input type="number" name="goals" value="{{ player.goals }}" min="0"></td>
+                <td><input type="number" name="goals" value="{{ player.goals | default(0) }}" min="0"></td>
             </tr>
             <tr>
                 <td>Assists</td>
-                <td><input type="number" name="assists" value="{{ player.assists }}" min="0"></td>
+                <td><input type="number" name="assists" value="{{ player.assists | default(0) }}" min="0"></td>
             </tr>
         </table>
 
