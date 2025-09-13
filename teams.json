@@ -216,4 +216,7 @@
       {"name": "Noah", "goals": 0, "assists": 0},
       {"name": "David", "goals": 0, "assists": 0},
       {"name": "Zach", "goals": 0, "assists": 0},
-      {"name": "Zameer", "goals": 0
+      {"name": "Zameer", "goals": 0, "assists": 0}
+    ]
+  }
+]
