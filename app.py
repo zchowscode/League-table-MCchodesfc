@@ -62,9 +62,15 @@ def team_page(team_name):
     if not team:
         return f"Team {team_name} not found!", 404
 
+    # Ensure all expected keys exist
     team.setdefault('players', [])
     team.setdefault('temp_lineup', [])
     team.setdefault('confirmed_lineups', [])
+    team.setdefault('played', 0)
+    team.setdefault('wins', 0)
+    team.setdefault('draws', 0)
+    team.setdefault('losses', 0)
+    team.setdefault('points', team.get('wins',0)*3 + team.get('draws',0))
 
     if request.method == 'POST':
         req_type = request.form.get('request_type')
@@ -230,7 +236,6 @@ def approve_request(request_id):
             increment = req.get('increment', 0)
             if stat in ['played','wins','draws','losses']:
                 team[stat] = max(0, team.get(stat,0) + increment)
-                # auto calculate points
                 team['points'] = team.get('wins',0)*3 + team.get('draws',0)
 
     save_teams(teams)
