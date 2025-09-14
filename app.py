@@ -10,7 +10,7 @@ REQUESTS_FILE = 'requests.json'
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 
-# -------------------- Data Helpers -------------------- #
+# -------------------- Helpers -------------------- #
 def load_teams():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
@@ -32,11 +32,17 @@ def save_requests(requests_data):
         json.dump(requests_data, f, indent=4)
 
 
-# -------------------- League Table -------------------- #
+# -------------------- Routes -------------------- #
 @app.route('/')
 def league_table():
     teams = load_teams()
+    # make safe defaults if keys missing
     for team in teams:
+        team.setdefault('goals_for', 0)
+        team.setdefault('goals_against', 0)
+        team.setdefault('wins', 0)
+        team.setdefault('draws', 0)
+        team.setdefault('players', [])
         team['goal_difference'] = team['goals_for'] - team['goals_against']
         team['points'] = team['wins'] * 3 + team['draws']
 
@@ -49,32 +55,35 @@ def league_table():
 
     for team in teams:
         for player in team.get('players', []):
+            player.setdefault('goals', 0)
+            player.setdefault('assists', 0)
             if player['goals'] > max_goals:
                 max_goals = player['goals']
-                top_scorer = player['name']
+                top_scorer = player.get('name')
             if player['assists'] > max_assists:
                 max_assists = player['assists']
-                top_assister = player['name']
+                top_assister = player.get('name')
 
     return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
 
-# -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+    team = next((t for t in teams if t.get('name') == team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
-    if 'temp_lineup' not in team:
-        team['temp_lineup'] = []
+    team.setdefault('temp_lineup', [])
+    team.setdefault('confirmed_lineups', [])
+    team.setdefault('players', [])
 
+    # handle lineup requests
     if request.method == 'POST' and request.form.get('request_type') == 'lineup':
-        user_name = request.form.get('user_name')
-        lineup_date = request.form.get('lineup_date')
-        temp_lineup_names = request.form.getlist('lineup')
-
+        user_name = request.form.get('user_name') or "Anonymous"
+        lineup_date = request.form.get('lineup_date') or ""
+        # getlist collects duplicated inputs named 'lineup'
+        temp_lineup_names = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
         team['temp_lineup'] = temp_lineup_names
 
         requests_data = load_requests()
@@ -98,22 +107,32 @@ def team_page(team_name):
     return render_template('team.html', team=team)
 
 
-# -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+    team = next((t for t in teams if t.get('name') == team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
-    player = next((p for p in team.get('players', []) if p['name'] == player_name), None)
+    player = next((p for p in team.get('players', []) if p.get('name') == player_name), None)
     if not player:
         return f"Player {player_name} not found in {team_name}!", 404
 
+    player.setdefault('goals', 0)
+    player.setdefault('assists', 0)
+
     if request.method == 'POST' and request.form.get('request_type') == 'player':
-        requester = request.form.get('requester')
-        goals = int(request.form.get('goals', player['goals']))
-        assists = int(request.form.get('assists', player['assists']))
+        requester = request.form.get('requester') or "Anonymous"
+
+        # robust int parsing
+        try:
+            goals = int(request.form.get('goals', player.get('goals', 0)))
+        except (ValueError, TypeError):
+            goals = player.get('goals', 0)
+        try:
+            assists = int(request.form.get('assists', player.get('assists', 0)))
+        except (ValueError, TypeError):
+            assists = player.get('assists', 0)
 
         requests_data = load_requests()
         new_request = {
@@ -136,7 +155,6 @@ def player_page(team_name, player_name):
     return render_template('player.html', team=team, player=player)
 
 
-# -------------------- Admin Login -------------------- #
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -149,7 +167,6 @@ def admin_login():
     return render_template('admin_login.html')
 
 
-# -------------------- Admin Requests -------------------- #
 @app.route('/admin/requests')
 def admin_requests():
     if not session.get('admin_logged_in'):
@@ -169,26 +186,33 @@ def approve_request(request_id):
         return redirect(url_for('admin_requests'))
 
     requests_data = load_requests()
-    req = next((r for r in requests_data if r['id'] == request_id), None)
+    req = next((r for r in requests_data if r.get('id') == request_id), None)
     if req:
         teams = load_teams()
-        team = next((t for t in teams if t['name'] == req['team']), None)
-        if req['type'] == 'lineup' and team:
-            if 'confirmed_lineups' not in team:
-                team['confirmed_lineups'] = []
-            lineup_objs = [next(p for p in team['players'] if p['name'] == n) for n in req['lineup'] if n]
-            team['confirmed_lineups'].append({'date': req['date'], 'lineup': lineup_objs})
-        elif req['type'] == 'player' and team:
-            player = next((p for p in team['players'] if p['name'] == req['player']), None)
+        team = next((t for t in teams if t.get('name') == req.get('team')), None)
+        if req.get('type') == 'lineup' and team:
+            team.setdefault('confirmed_lineups', [])
+            lineup_objs = []
+            for name in req.get('lineup', []):
+                p = next((pl for pl in team.get('players', []) if pl.get('name') == name), None)
+                if p:
+                    lineup_objs.append(p)
+            team['confirmed_lineups'].append({'date': req.get('date'), 'lineup': lineup_objs})
+        elif req.get('type') == 'player' and team:
+            player = next((p for p in team.get('players', []) if p.get('name') == req.get('player')), None)
             if player:
-                player['goals'] = req['goals']
-                player['assists'] = req['assists']
+                # only set if not None
+                if req.get('goals') is not None:
+                    player['goals'] = req.get('goals')
+                if req.get('assists') is not None:
+                    player['assists'] = req.get('assists')
 
-        requests_data = [r for r in requests_data if r['id'] != request_id]
+        # remove request and save
+        requests_data = [r for r in requests_data if r.get('id') != request_id]
         save_requests(requests_data)
         save_teams(teams)
+        flash("Request approved!")
 
-    flash("Request approved!")
     return redirect(url_for('admin_requests'))
 
 
@@ -203,20 +227,18 @@ def deny_request(request_id):
         return redirect(url_for('admin_requests'))
 
     requests_data = load_requests()
-    requests_data = [r for r in requests_data if r['id'] != request_id]
+    requests_data = [r for r in requests_data if r.get('id') != request_id]
     save_requests(requests_data)
-
     flash("Request denied!")
     return redirect(url_for('admin_requests'))
 
 
-# -------------------- Delete Lineup -------------------- #
 @app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
 def delete_lineup(team_name, lineup_date):
     teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+    team = next((t for t in teams if t.get('name') == team_name), None)
     if team and 'confirmed_lineups' in team:
-        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl['date'] != lineup_date]
+        team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl.get('date') != lineup_date]
         save_teams(teams)
     flash("Confirmed lineup deleted!")
     return redirect(url_for('team_page', team_name=team_name))
