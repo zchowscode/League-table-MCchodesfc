@@ -121,6 +121,37 @@ def team_page(team_name):
 
     return render_template('team.html', team=team)
 
+# -------------------- Delete Lineup Request -------------------- #
+@app.route('/team/<team_name>/delete_lineup', methods=['POST'])
+def team_delete_lineup_request(team_name):
+    teams = load_teams()
+    team = next((t for t in teams if t['name'] == team_name), None)
+    if not team:
+        return f"Team {team_name} not found!", 404
+
+    lineup_date = request.form.get('lineup_date')
+    if not lineup_date:
+        flash("No lineup date provided.")
+        return redirect(url_for('team_page', team_name=team_name))
+
+    # Save the delete request
+    requests_data = load_requests()
+    new_request = {
+        "id": len(requests_data) + 1,
+        "user": "Anonymous",
+        "team": team_name,
+        "type": "delete_lineup",
+        "lineup": None,
+        "player": None,
+        "goals": None,
+        "assists": None,
+        "date": lineup_date
+    }
+    requests_data.append(new_request)
+    save_requests(requests_data)
+    flash("Delete lineup request sent!")
+    return redirect(url_for('team_page', team_name=team_name))
+
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
