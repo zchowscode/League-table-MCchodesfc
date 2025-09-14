@@ -30,17 +30,7 @@ def save_requests(requests_data):
     with open(REQUESTS_FILE, 'w') as f:
         json.dump(requests_data, f, indent=4)
 
-def admin_required(func):
-    def wrapper(*args, **kwargs):
-        if not session.get('admin_logged_in'):
-            flash("Admin login required.")
-            return redirect(url_for('admin_login'))
-        return func(*args, **kwargs)
-    wrapper.__name__ = func.__name__
-    return wrapper
-
 # -------------------- Routes -------------------- #
-
 @app.route('/')
 def league_table():
     teams = load_teams()
@@ -164,67 +154,70 @@ def admin_login():
     if request.method == 'POST':
         password = request.form.get('password')
         if password == ADMIN_PASSWORD:
-            session['admin_logged_in'] = True
-            flash("Admin logged in!")
+            session['admin'] = True
             return redirect(url_for('admin_requests'))
         else:
-            flash("Wrong password.")
-            return redirect(url_for('admin_login'))
+            flash("Incorrect password!")
     return render_template('admin_login.html')
 
-@app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin_logged_in', None)
-    flash("Admin logged out.")
-    return redirect(url_for('league_table'))
-
 @app.route('/admin/requests')
-@admin_required
 def admin_requests():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
     requests_data = load_requests()
     return render_template('admin_requests.html', requests=requests_data)
 
 @app.route('/admin/requests/approve/<int:request_id>', methods=['POST'])
-@admin_required
 def admin_approve_request(request_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
     requests_data = load_requests()
-    req = next((r for r in requests_data if r['id'] == request_id), None)
+    req = next((r for r in requests_data if r['id']==request_id), None)
     if not req:
-        flash("Request not found.")
+        flash("Request not found!")
         return redirect(url_for('admin_requests'))
 
     teams = load_teams()
-    team = next((t for t in teams if t['name'] == req['team']), None)
-    if not team:
-        flash("Team not found.")
-        return redirect(url_for('admin_requests'))
-
     if req['type'] == 'player':
-        player = next((p for p in team['players'] if p['name']==req['player']), None)
-        if player:
-            player['goals'] = req['goals']
-            player['assists'] = req['assists']
+        team = next((t for t in teams if t['name']==req['team']), None)
+        if team:
+            player = next((p for p in team.get('players', []) if p['name']==req['player']), None)
+            if player:
+                player['goals'] = req['goals']
+                player['assists'] = req['assists']
     elif req['type'] == 'lineup':
-        team.setdefault('confirmed_lineups', [])
-        team['confirmed_lineups'].append({
-            "date": req['date'],
-            "lineup": req['lineup']
-        })
+        team = next((t for t in teams if t['name']==req['team']), None)
+        if team:
+            team.setdefault('confirmed_lineups', [])
+            team['confirmed_lineups'].append({'date': req['date'], 'lineup': req['lineup']})
 
-    save_teams(teams)
-    requests_data = [r for r in requests_data if r['id'] != request_id]
+    requests_data.remove(req)
     save_requests(requests_data)
+    save_teams(teams)
     flash("Request approved!")
     return redirect(url_for('admin_requests'))
 
 @app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
-@admin_required
 def admin_deny_request(request_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
     requests_data = load_requests()
-    requests_data = [r for r in requests_data if r['id'] != request_id]
-    save_requests(requests_data)
-    flash("Request denied.")
+    req = next((r for r in requests_data if r['id']==request_id), None)
+    if req:
+        requests_data.remove(req)
+        save_requests(requests_data)
+        flash("Request denied!")
     return redirect(url_for('admin_requests'))
+
+@app.route('/team/<team_name>/delete_lineup_request/<lineup_date>', methods=['POST'])
+def team_delete_lineup_request(team_name, lineup_date):
+    requests_data = load_requests()
+    req = next((r for r in requests_data if r['team']==team_name and r['type']=='lineup' and r['date']==lineup_date), None)
+    if req:
+        requests_data.remove(req)
+        save_requests(requests_data)
+        flash("Lineup request deleted!")
+    return redirect(url_for('team_page', team_name=team_name))
 
 if __name__ == '__main__':
     app.run(debug=True)
