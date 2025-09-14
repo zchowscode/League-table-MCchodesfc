@@ -36,7 +36,6 @@ def save_requests(requests_data):
 @app.route('/')
 def league_table():
     teams = load_teams()
-    # make safe defaults if keys missing
     for team in teams:
         team.setdefault('goals_for', 0)
         team.setdefault('goals_against', 0)
@@ -82,7 +81,6 @@ def team_page(team_name):
     if request.method == 'POST' and request.form.get('request_type') == 'lineup':
         user_name = request.form.get('user_name') or "Anonymous"
         lineup_date = request.form.get('lineup_date') or ""
-        # getlist collects duplicated inputs named 'lineup'
         temp_lineup_names = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
         team['temp_lineup'] = temp_lineup_names
 
@@ -124,7 +122,6 @@ def player_page(team_name, player_name):
     if request.method == 'POST' and request.form.get('request_type') == 'player':
         requester = request.form.get('requester') or "Anonymous"
 
-        # robust int parsing
         try:
             goals = int(request.form.get('goals', player.get('goals', 0)))
         except (ValueError, TypeError):
@@ -201,7 +198,6 @@ def approve_request(request_id):
         elif req.get('type') == 'player' and team:
             player = next((p for p in team.get('players', []) if p.get('name') == req.get('player')), None)
             if player:
-                # only set if not None
                 if req.get('goals') is not None:
                     player['goals'] = req.get('goals')
                 if req.get('assists') is not None:
@@ -233,15 +229,24 @@ def deny_request(request_id):
     return redirect(url_for('admin_requests'))
 
 
-@app.route('/team/<team_name>/lineup/delete/<lineup_date>', methods=['POST'])
-def delete_lineup(team_name, lineup_date):
+@app.route('/admin/requests/delete_lineup/<team_name>/<lineup_date>', methods=['POST'])
+def delete_lineup_request(team_name, lineup_date):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    admin_password = request.form.get('admin_password')
+    if admin_password != ADMIN_PASSWORD:
+        flash("Wrong admin password!")
+        return redirect(url_for('admin_requests'))
+
     teams = load_teams()
     team = next((t for t in teams if t.get('name') == team_name), None)
     if team and 'confirmed_lineups' in team:
         team['confirmed_lineups'] = [cl for cl in team['confirmed_lineups'] if cl.get('date') != lineup_date]
         save_teams(teams)
-    flash("Confirmed lineup deleted!")
-    return redirect(url_for('team_page', team_name=team_name))
+        flash("Confirmed lineup deleted!")
+
+    return redirect(url_for('admin_requests'))
 
 
 if __name__ == '__main__':
