@@ -56,7 +56,8 @@ def league_table():
     top_scorer = max(player_totals.items(), key=lambda x: x[1]['goals'], default=(None, None))[0]
     top_assister = max(player_totals.items(), key=lambda x: x[1]['assists'], default=(None, None))[0]
 
-    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister, player_totals=player_totals)
+    return render_template('index.html', teams=teams, top_scorer=top_scorer,
+                           top_assister=top_assister, player_totals=player_totals)
 
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
@@ -148,75 +149,25 @@ def player_page(team_name, player_name):
                            cumulative_assists=cumulative_assists,
                            per_team_stats=per_team_stats)
 
-# -------------------- Admin Routes -------------------- #
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        password = request.form.get('password')
-        if password == ADMIN_PASSWORD:
-            session['admin'] = True
-            return redirect(url_for('admin_requests'))
-        else:
-            flash("Incorrect password!")
-    return render_template('admin_login.html')
-
-@app.route('/admin/requests')
-def admin_requests():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
+# ---------------- Delete Lineup Request ---------------- #
+@app.route('/team/<team_name>/lineup/delete', methods=['POST'])
+def team_delete_lineup_request(team_name):
+    lineup_date = request.form.get('lineup_date')
     requests_data = load_requests()
-    return render_template('admin_requests.html', requests=requests_data)
-
-@app.route('/admin/requests/approve/<int:request_id>', methods=['POST'])
-def admin_approve_request(request_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    requests_data = load_requests()
-    req = next((r for r in requests_data if r['id']==request_id), None)
-    if not req:
-        flash("Request not found!")
-        return redirect(url_for('admin_requests'))
-
-    teams = load_teams()
-    if req['type'] == 'player':
-        team = next((t for t in teams if t['name']==req['team']), None)
-        if team:
-            player = next((p for p in team.get('players', []) if p['name']==req['player']), None)
-            if player:
-                player['goals'] = req['goals']
-                player['assists'] = req['assists']
-    elif req['type'] == 'lineup':
-        team = next((t for t in teams if t['name']==req['team']), None)
-        if team:
-            team.setdefault('confirmed_lineups', [])
-            team['confirmed_lineups'].append({'date': req['date'], 'lineup': req['lineup']})
-
-    requests_data.remove(req)
+    new_request = {
+        "id": len(requests_data) + 1,
+        "user": "Anonymous",
+        "team": team_name,
+        "type": "delete_lineup",
+        "lineup": None,
+        "player": None,
+        "goals": None,
+        "assists": None,
+        "date": lineup_date
+    }
+    requests_data.append(new_request)
     save_requests(requests_data)
-    save_teams(teams)
-    flash("Request approved!")
-    return redirect(url_for('admin_requests'))
-
-@app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
-def admin_deny_request(request_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    requests_data = load_requests()
-    req = next((r for r in requests_data if r['id']==request_id), None)
-    if req:
-        requests_data.remove(req)
-        save_requests(requests_data)
-        flash("Request denied!")
-    return redirect(url_for('admin_requests'))
-
-@app.route('/team/<team_name>/delete_lineup_request/<lineup_date>', methods=['POST'])
-def team_delete_lineup_request(team_name, lineup_date):
-    requests_data = load_requests()
-    req = next((r for r in requests_data if r['team']==team_name and r['type']=='lineup' and r['date']==lineup_date), None)
-    if req:
-        requests_data.remove(req)
-        save_requests(requests_data)
-        flash("Lineup request deleted!")
+    flash("Delete lineup request sent!")
     return redirect(url_for('team_page', team_name=team_name))
 
 if __name__ == '__main__':
