@@ -35,12 +35,12 @@
             {% for team in teams %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td><a href="{{ url_for('team_page', team_name=team.name) }}">{{ team.name }}</a></td>
-                <td>{{ team.wins + team.draws + team.losses }}</td>
-                <td>{{ team.wins }}</td>
-                <td>{{ team.draws }}</td>
-                <td>{{ team.losses }}</td>
-                <td>{{ team.points }}</td>
+                <td><a href="{{ url_for('team_page', team_name=team.name|replace(' ','_')) }}">{{ team.name }}</a></td>
+                <td>{{ team.get('played', team.wins + team.draws + team.losses) }}</td>
+                <td>{{ team.get('wins',0) }}</td>
+                <td>{{ team.get('draws',0) }}</td>
+                <td>{{ team.get('losses',0) }}</td>
+                <td>{{ team.get('points',0) }}</td>
             </tr>
             {% endfor %}
         </tbody>
