@@ -38,14 +38,6 @@
         }
         .confirm-btn { background-color: #4CAF50; color: white; }
         .deny-btn { background-color: #f44336; color: white; }
-        input[type="password"] {
-            padding: 5px;
-            margin-right: 10px;
-            border-radius: 5px;
-            border: 1px solid #555;
-            background-color: #444;
-            color: #f0f0f0;
-        }
         .flash { color: #4CAF50; margin-bottom: 10px; text-align: center; }
     </style>
 </head>
@@ -84,12 +76,10 @@
                 {% endif %}
             </td>
             <td>
-                <form action="{{ url_for('admin_approve_request', request_id=req.id) }}" method="POST" style="display:inline;">
-                    <input type="password" name="admin_password" placeholder="Admin Password" required>
+                <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="confirm-btn">Approve</button>
                 </form>
-                <form action="{{ url_for('admin_deny_request', request_id=req.id) }}" method="POST" style="display:inline;">
-                    <input type="password" name="admin_password" placeholder="Admin Password" required>
+                <form action="{{ url_for('deny_request', request_id=req.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="deny-btn">Deny</button>
                 </form>
             </td>
