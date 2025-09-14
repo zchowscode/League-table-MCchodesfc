@@ -62,7 +62,7 @@ def team_page(team_name):
     if not team:
         return f"Team {team_name} not found!", 404
 
-    # Ensure all expected keys exist
+    # Ensure keys exist
     team.setdefault('players', [])
     team.setdefault('temp_lineup', [])
     team.setdefault('confirmed_lineups', [])
@@ -77,7 +77,7 @@ def team_page(team_name):
         requests_data = load_requests()
         new_request = {
             "id": len(requests_data)+1,
-            "user": request.form.get('user_name', 'Anonymous'),
+            "user": "system",
             "team": team_name,
             "type": req_type,
             "lineup": None,
@@ -103,10 +103,6 @@ def team_page(team_name):
             except: assists = 0
             new_request.update({"player": player_name, "goals": goals, "assists": assists})
 
-        elif req_type == 'delete_lineup':
-            lineup_date = request.form.get('lineup_date')
-            new_request.update({"type": "delete_lineup", "date": lineup_date})
-
         elif req_type == 'update_stat':
             stat = request.form.get('stat')
             try: increment = int(request.form.get('increment', 0))
@@ -120,33 +116,6 @@ def team_page(team_name):
         return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
     return render_template('team.html', team=team)
-
-# -------------------- Delete Lineup Request -------------------- #
-@app.route('/team/<team_name>/delete_lineup', methods=['POST'])
-def team_delete_lineup_request(team_name):
-    team_name = team_name.replace('_', ' ')
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
-    if not team:
-        return f"Team {team_name} not found!", 404
-
-    lineup_date = request.form.get('lineup_date')
-    requests_data = load_requests()
-    new_request = {
-        "id": len(requests_data)+1,
-        "user": request.form.get('user_name', 'Anonymous'),
-        "team": team_name,
-        "type": "delete_lineup",
-        "lineup": None,
-        "player": None,
-        "goals": None,
-        "assists": None,
-        "date": lineup_date
-    }
-    requests_data.append(new_request)
-    save_requests(requests_data)
-    flash("Delete lineup request sent!")
-    return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
@@ -166,7 +135,6 @@ def player_page(team_name, player_name):
     player.setdefault('assists',0)
 
     if request.method == 'POST':
-        requester = request.form.get('requester','Anonymous')
         try: goals = int(request.form.get('goals', player['goals']))
         except: goals = player['goals']
         try: assists = int(request.form.get('assists', player['assists']))
@@ -175,7 +143,7 @@ def player_page(team_name, player_name):
         requests_data = load_requests()
         new_request = {
             "id": len(requests_data)+1,
-            "user": requester,
+            "user": "system",
             "team": team_name,
             "type": "player",
             "lineup": None,
@@ -191,7 +159,7 @@ def player_page(team_name, player_name):
 
     return render_template('player.html', team=team, player=player)
 
-# -------------------- Admin Login -------------------- #
+# -------------------- Admin -------------------- #
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method == 'POST':
@@ -203,7 +171,6 @@ def admin_login():
             flash("Incorrect password!")
     return render_template('admin_login.html')
 
-# -------------------- Admin Requests -------------------- #
 @app.route('/admin/requests')
 @login_required
 def admin_requests():
@@ -241,7 +208,6 @@ def approve_request(request_id):
     save_teams(teams)
     requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
-
     flash("Request approved!")
     return redirect(url_for('admin_requests'))
 
