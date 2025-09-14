@@ -31,7 +31,6 @@
 
   <h3>Request Lineup Update</h3>
   <form method="POST">
-    <!-- important: request_type must match app.py -->
     <input type="hidden" name="request_type" value="lineup">
     <label>Your Name:</label>
     <input type="text" name="user_name" required><br><br>
@@ -55,8 +54,12 @@
           <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
-      <form method="POST" action="{{ url_for('delete_lineup', team_name=team.name, lineup_date=cl.date) }}">
-        <button type="submit">Delete</button>
+      <!-- Delete lineup request -->
+      <form method="POST">
+        <input type="hidden" name="request_type" value="delete_lineup">
+        <input type="hidden" name="lineup_date" value="{{ cl.date }}">
+        <input type="text" name="user_name" placeholder="Your Name" required>
+        <button type="submit">Request Lineup Deletion</button>
       </form>
     {% endfor %}
   {% endif %}
