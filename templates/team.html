@@ -49,7 +49,7 @@
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
             <input type="hidden" name="increment" value="1">
-            <input type="text" name="user_name" placeholder="Your Name" required>
+            <input type="text" name="user_name" placeholder="Enter Your Name" required>
             <button type="submit">⬆</button>
           </form>
           <!-- Decrement -->
@@ -58,7 +58,7 @@
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
             <input type="hidden" name="increment" value="-1">
-            <input type="text" name="user_name" placeholder="Your Name" required>
+            <input type="text" name="user_name" placeholder="Enter Your Name" required>
             <button type="submit">⬇</button>
           </form>
           {% endif %}
@@ -76,7 +76,7 @@
   <form method="POST">
     <input type="hidden" name="request_type" value="lineup">
     <label>Your Name:</label>
-    <input type="text" name="user_name" required><br><br>
+    <input type="text" name="user_name" placeholder="Enter Your Name" required><br><br>
     {% for i in range(8) %}
       <input type="text" name="lineup" value="{{ team.temp_lineup[i] if i < team.temp_lineup|length else '' }}" placeholder="Player {{ i+1 }}"><br>
     {% endfor %}
@@ -97,7 +97,7 @@
       <form method="POST">
         <input type="hidden" name="request_type" value="delete_lineup">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
-        <input type="text" name="user_name" placeholder="Your Name" required>
+        <input type="text" name="user_name" placeholder="Enter Your Name" required>
         <button type="submit">Request Delete</button>
       </form>
     {% endfor %}
