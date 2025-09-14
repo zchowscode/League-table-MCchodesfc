@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import json
 import os
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -31,7 +32,6 @@ def save_requests(requests_data):
         json.dump(requests_data, f, indent=4)
 
 def login_required(func):
-    from functools import wraps
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not session.get('admin'):
@@ -50,7 +50,7 @@ def league_table():
         team.setdefault('wins', 0)
         team.setdefault('draws', 0)
         team.setdefault('losses', 0)
-        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
+        team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
     return render_template('index.html', teams=teams)
 
 # -------------------- Team Page -------------------- #
@@ -62,7 +62,6 @@ def team_page(team_name):
     if not team:
         return f"Team {team_name} not found!", 404
 
-    # Ensure keys exist
     team.setdefault('players', [])
     team.setdefault('temp_lineup', [])
     team.setdefault('confirmed_lineups', [])
@@ -76,8 +75,8 @@ def team_page(team_name):
         req_type = request.form.get('request_type')
         requests_data = load_requests()
         new_request = {
-            "id": len(requests_data)+1,
-            "user": "system",
+            "id": len(requests_data) + 1,
+            "user": request.form.get('user_name', 'Anonymous'),
             "team": team_name,
             "type": req_type,
             "lineup": None,
@@ -123,7 +122,7 @@ def player_page(team_name, player_name):
     team_name = team_name.replace('_', ' ')
     player_name = player_name.replace('_', ' ')
     teams = load_teams()
-    team = next((t for t in teams if t['name']==team_name), None)
+    team = next((t for t in teams if t['name'] == team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
@@ -143,7 +142,7 @@ def player_page(team_name, player_name):
         requests_data = load_requests()
         new_request = {
             "id": len(requests_data)+1,
-            "user": "system",
+            "user": request.form.get('user_name', 'Anonymous'),
             "team": team_name,
             "type": "player",
             "lineup": None,
@@ -196,8 +195,6 @@ def approve_request(request_id):
             if player:
                 player['goals'] = req['goals']
                 player['assists'] = req['assists']
-        elif req['type']=='delete_lineup':
-            team['confirmed_lineups'] = [cl for cl in team.get('confirmed_lineups', []) if cl['date'] != req['date']]
         elif req['type']=='update_stat':
             stat = req.get('stat')
             increment = req.get('increment', 0)
