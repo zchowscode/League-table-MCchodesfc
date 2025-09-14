@@ -45,21 +45,4 @@
   </form>
 
   {% if team.confirmed_lineups %}
-    <h3>Confirmed Lineups</h3>
-    {% for cl in team.confirmed_lineups %}
-      <p><strong>Date:</strong> {{ cl.date }}</p>
-      <p><strong>Lineup:</strong>
-        {% for player in cl.lineup %}
-          <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>{% if not loop.last %}, {% endif %}
-        {% endfor %}
-      </p>
-      <!-- Delete lineup must be done via request -->
-      <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name, lineup_date=cl.date) }}">
-        <button type="submit">Request Delete</button>
-      </form>
-    {% endfor %}
-  {% endif %}
-
-  <p><a href="{{ url_for('league_table') }}">⬅ Back to League Table</a></p>
-</body>
-</html>
+    <h3>Confirmed Lineups</h3
