@@ -6,9 +6,12 @@
   <style>
     body { background-color:#2f2f2f; color:#eee; font-family:Arial, sans-serif; padding:20px; }
     .flash { color:#4CAF50; margin-bottom:10px; }
-    input[type="text"], input[type="date"] { padding:5px; margin:3px 0; border:1px solid #555; border-radius:3px; background:#444; color:#eee; }
-    button { padding:5px 10px; background:#666; color:#eee; border:none; border-radius:3px; cursor:pointer; }
+    input[type="text"], input[type="date"], input[type="number"] { padding:5px; margin:3px 0; border:1px solid #555; border-radius:3px; background:#444; color:#eee; width:80px; }
+    button { padding:5px 10px; background:#666; color:#eee; border:none; border-radius:3px; cursor:pointer; margin-left:5px; }
     .player-list a { display:block; margin:2px 0; color:#80dfff; text-decoration:none; }
+    table { border-collapse: collapse; margin-top:10px; }
+    th, td { padding:5px 10px; border:1px solid #555; text-align:center; }
+    form.inline { display:inline; margin:0; }
   </style>
 </head>
 <body>
@@ -28,6 +31,44 @@
       <a href="{{ url_for('player_page', team_name=team.name|replace(' ', '_'), player_name=player.name|replace(' ', '_')) }}">{{ player.name }}</a>
     {% endfor %}
   </div>
+
+  <h3>Team Stats</h3>
+  <table>
+    <tr>
+      <th>Stat</th>
+      <th>Value</th>
+      <th>Update</th>
+    </tr>
+    {% for stat in ['played', 'wins', 'draws', 'losses'] %}
+      <tr>
+        <td>{{ stat.capitalize() }}</td>
+        <td>{{ team[stat] }}</td>
+        <td>
+          <form method="POST" class="inline">
+            <input type="hidden" name="request_type" value="update_stat">
+            <input type="hidden" name="stat" value="{{ stat }}">
+            <input type="hidden" name="increment" value="1">
+            <input type="text" name="user_name" placeholder="Your Name" required>
+            <button type="submit">⬆</button>
+          </form>
+          {% if team[stat] > 0 %}
+          <form method="POST" class="inline">
+            <input type="hidden" name="request_type" value="update_stat">
+            <input type="hidden" name="stat" value="{{ stat }}">
+            <input type="hidden" name="increment" value="-1">
+            <input type="text" name="user_name" placeholder="Your Name" required>
+            <button type="submit">⬇</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    <tr>
+      <td>Points</td>
+      <td>{{ team.points }}</td>
+      <td>-</td>
+    </tr>
+  </table>
 
   <h3>Request Lineup Update</h3>
   <form method="POST">
@@ -53,7 +94,6 @@
           <a href="{{ url_for('player_page', team_name=team.name|replace(' ', '_'), player_name=player|replace(' ', '_')) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
-      <!-- Request Delete Lineup -->
       <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name|replace(' ', '_')) }}">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
         <button type="submit">Request Delete</button>
