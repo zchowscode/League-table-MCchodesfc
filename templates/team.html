@@ -41,7 +41,6 @@
 
     <label>Date:</label>
     <input type="date" name="lineup_date" required><br><br>
-
     <button type="submit">Send Request</button>
   </form>
 
@@ -54,12 +53,9 @@
           <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
-      <!-- Delete lineup request -->
-      <form method="POST">
-        <input type="hidden" name="request_type" value="delete_lineup">
-        <input type="hidden" name="lineup_date" value="{{ cl.date }}">
-        <input type="text" name="user_name" placeholder="Your Name" required>
-        <button type="submit">Request Lineup Deletion</button>
+      <!-- Delete lineup must be done via request -->
+      <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name, lineup_date=cl.date) }}">
+        <button type="submit">Request Delete</button>
       </form>
     {% endfor %}
   {% endif %}
