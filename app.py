@@ -46,41 +46,23 @@ def league_table():
     teams = load_teams()
     for team in teams:
         team.setdefault('players', [])
+        team.setdefault('played', 0)
         team.setdefault('wins', 0)
         team.setdefault('draws', 0)
-        team.setdefault('goals_for', 0)
-        team.setdefault('goals_against', 0)
-        team['goal_difference'] = team['goals_for'] - team['goals_against']
-        team['points'] = team['wins'] * 3 + team['draws']
-
-    # cumulative stats
-    player_totals = {}
-    for team in teams:
-        for player in team.get('players', []):
-            name = player['name']
-            player_totals.setdefault(name, {'goals':0, 'assists':0, 'teams':{}})
-            player_totals[name]['goals'] += player.get('goals', 0)
-            player_totals[name]['assists'] += player.get('assists', 0)
-            player_totals[name]['teams'][team['name']] = {'goals': player.get('goals',0), 'assists': player.get('assists',0)}
-
-    top_scorer = max(player_totals.items(), key=lambda x: x[1]['goals'], default=(None, None))[0]
-    top_assister = max(player_totals.items(), key=lambda x: x[1]['assists'], default=(None, None))[0]
-
-    return render_template('index.html', teams=teams, top_scorer=top_scorer,
-                           top_assister=top_assister, player_totals=player_totals)
+        team.setdefault('losses', 0)
+        team['points'] = team['wins']*3 + team['draws']
+    return render_template('index.html', teams=teams)
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
-    team_name = team_name.replace('_', ' ')  # convert underscores to spaces
+    team_name = team_name.replace('_', ' ')
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
     team.setdefault('players', [])
-    team.setdefault('temp_lineup', [])
-    team.setdefault('confirmed_lineups', [])
 
     if request.method == 'POST':
         req_type = request.form.get('request_type')
@@ -90,30 +72,15 @@ def team_page(team_name):
             "user": request.form.get('user_name', 'Anonymous'),
             "team": team_name,
             "type": req_type,
-            "lineup": None,
-            "player": None,
-            "goals": None,
-            "assists": None,
-            "date": None
+            "stat": None,
+            "increment": None
         }
 
-        if req_type == 'lineup':
-            lineup_date = request.form.get('lineup_date')
-            temp_lineup = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
-            team['temp_lineup'] = temp_lineup
-            new_request.update({"lineup": temp_lineup, "date": lineup_date})
-
-        elif req_type == 'player':
-            player_name = request.form.get('player_name')
-            try: goals = int(request.form.get('goals', 0))
-            except: goals = 0
-            try: assists = int(request.form.get('assists', 0))
-            except: assists = 0
-            new_request.update({"player": player_name, "goals": goals, "assists": assists})
-
-        elif req_type == 'delete_lineup':
-            lineup_date = request.form.get('lineup_date')
-            new_request.update({"type": "delete_lineup", "date": lineup_date})
+        if req_type == 'update_stat':
+            stat = request.form.get('stat')  # 'played', 'wins', 'draws', 'losses'
+            try: increment = int(request.form.get('increment', 0))
+            except: increment = 0
+            new_request.update({"stat": stat, "increment": increment})
 
         requests_data.append(new_request)
         save_requests(requests_data)
@@ -121,33 +88,6 @@ def team_page(team_name):
         return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
     return render_template('team.html', team=team)
-
-# -------------------- Delete Lineup Request -------------------- #
-@app.route('/team/<team_name>/delete_lineup', methods=['POST'])
-def team_delete_lineup_request(team_name):
-    team_name = team_name.replace('_', ' ')  # fix spaces
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
-    if not team:
-        return f"Team {team_name} not found!", 404
-
-    lineup_date = request.form.get('lineup_date')
-    requests_data = load_requests()
-    new_request = {
-        "id": len(requests_data)+1,
-        "user": request.form.get('user_name', 'Anonymous'),
-        "team": team_name,
-        "type": "delete_lineup",
-        "lineup": None,
-        "player": None,
-        "goals": None,
-        "assists": None,
-        "date": lineup_date
-    }
-    requests_data.append(new_request)
-    save_requests(requests_data)
-    flash("Delete lineup request sent!")
-    return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
@@ -163,15 +103,12 @@ def player_page(team_name, player_name):
     if not player:
         return f"Player {player_name} not found in {team_name}!", 404
 
-    player.setdefault('goals',0)
-    player.setdefault('assists',0)
-
     if request.method == 'POST':
         requester = request.form.get('requester','Anonymous')
-        try: goals = int(request.form.get('goals', player['goals']))
-        except: goals = player['goals']
-        try: assists = int(request.form.get('assists', player['assists']))
-        except: assists = player['assists']
+        try: goals = int(request.form.get('goals', player.get('goals',0)))
+        except: goals = player.get('goals',0)
+        try: assists = int(request.form.get('assists', player.get('assists',0)))
+        except: assists = player.get('assists',0)
 
         requests_data = load_requests()
         new_request = {
@@ -179,31 +116,16 @@ def player_page(team_name, player_name):
             "user": requester,
             "team": team_name,
             "type": "player",
-            "lineup": None,
             "player": player_name,
             "goals": goals,
-            "assists": assists,
-            "date": None
+            "assists": assists
         }
         requests_data.append(new_request)
         save_requests(requests_data)
         flash("Player stats request sent!")
         return redirect(url_for('player_page', team_name=team_name.replace(' ', '_'), player_name=player_name.replace(' ', '_')))
 
-    cumulative_goals = 0
-    cumulative_assists = 0
-    per_team_stats = {}
-    for t in teams:
-        for p in t.get('players', []):
-            if p['name'] == player_name:
-                cumulative_goals += p.get('goals',0)
-                cumulative_assists += p.get('assists',0)
-                per_team_stats[t['name']] = {'goals': p.get('goals',0), 'assists': p.get('assists',0)}
-
-    return render_template('player.html', team=team, player=player,
-                           cumulative_goals=cumulative_goals,
-                           cumulative_assists=cumulative_assists,
-                           per_team_stats=per_team_stats)
+    return render_template('player.html', team=team, player=player)
 
 # -------------------- Admin Login -------------------- #
 @app.route('/admin/login', methods=['GET','POST'])
@@ -235,16 +157,12 @@ def approve_request(request_id):
 
     teams = load_teams()
     team = next((t for t in teams if t['name']==req['team']), None)
-    if team:
-        if req['type']=='lineup':
-            team.setdefault('confirmed_lineups', []).append({'date': req['date'], 'lineup': req['lineup']})
-        elif req['type']=='player':
-            player = next((p for p in team.get('players', []) if p['name']==req['player']), None)
-            if player:
-                player['goals'] = req['goals']
-                player['assists'] = req['assists']
-        elif req['type']=='delete_lineup':
-            team['confirmed_lineups'] = [cl for cl in team.get('confirmed_lineups', []) if cl['date'] != req['date']]
+    if team and req['type']=='update_stat':
+        stat = req['stat']
+        increment = req['increment']
+        if stat in ['played', 'wins', 'draws', 'losses']:
+            team[stat] = team.get(stat,0) + increment
+            team['points'] = team.get('wins',0)*3 + team.get('draws',0)
 
     save_teams(teams)
 
