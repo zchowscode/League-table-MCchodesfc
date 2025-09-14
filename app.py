@@ -72,6 +72,7 @@ def league_table():
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
+    team_name = team_name.replace('_', ' ')  # convert underscores to spaces
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
     if not team:
@@ -117,28 +118,24 @@ def team_page(team_name):
         requests_data.append(new_request)
         save_requests(requests_data)
         flash("Request sent!")
-        return redirect(url_for('team_page', team_name=team_name))
+        return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
     return render_template('team.html', team=team)
 
 # -------------------- Delete Lineup Request -------------------- #
 @app.route('/team/<team_name>/delete_lineup', methods=['POST'])
 def team_delete_lineup_request(team_name):
+    team_name = team_name.replace('_', ' ')  # fix spaces
     teams = load_teams()
     team = next((t for t in teams if t['name'] == team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
     lineup_date = request.form.get('lineup_date')
-    if not lineup_date:
-        flash("No lineup date provided.")
-        return redirect(url_for('team_page', team_name=team_name))
-
-    # Save the delete request
     requests_data = load_requests()
     new_request = {
-        "id": len(requests_data) + 1,
-        "user": "Anonymous",
+        "id": len(requests_data)+1,
+        "user": request.form.get('user_name', 'Anonymous'),
         "team": team_name,
         "type": "delete_lineup",
         "lineup": None,
@@ -150,11 +147,13 @@ def team_delete_lineup_request(team_name):
     requests_data.append(new_request)
     save_requests(requests_data)
     flash("Delete lineup request sent!")
-    return redirect(url_for('team_page', team_name=team_name))
+    return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
+    team_name = team_name.replace('_', ' ')
+    player_name = player_name.replace('_', ' ')
     teams = load_teams()
     team = next((t for t in teams if t['name']==team_name), None)
     if not team:
@@ -189,7 +188,7 @@ def player_page(team_name, player_name):
         requests_data.append(new_request)
         save_requests(requests_data)
         flash("Player stats request sent!")
-        return redirect(url_for('player_page', team_name=team_name, player_name=player_name))
+        return redirect(url_for('player_page', team_name=team_name.replace(' ', '_'), player_name=player_name.replace(' ', '_')))
 
     cumulative_goals = 0
     cumulative_assists = 0
@@ -249,7 +248,6 @@ def approve_request(request_id):
 
     save_teams(teams)
 
-    # remove the request
     requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
 
