@@ -50,12 +50,11 @@
       <p><strong>Date:</strong> {{ cl.date }}</p>
       <p><strong>Lineup:</strong>
         {% for player in cl.lineup %}
-          <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>{% if not loop.last %}, {% endif %}
+          <a href="{{ url_for('player_page', team_name=team.name, player_name=player) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
       <!-- Request Delete Lineup -->
-      <form method="POST">
-        <input type="hidden" name="request_type" value="delete_lineup">
+      <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name) }}">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
         <button type="submit">Request Delete</button>
       </form>
