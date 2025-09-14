@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import json, os
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -30,7 +31,6 @@ def save_requests(requests_data):
         json.dump(requests_data, f, indent=4)
 
 def login_required(func):
-    from functools import wraps
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not session.get('admin'):
@@ -43,15 +43,34 @@ def login_required(func):
 @app.route('/')
 def league_table():
     teams = load_teams()
+
+    # Ensure keys exist & calculate points
     for team in teams:
+        team.setdefault('players', [])
         team.setdefault('played', 0)
         team.setdefault('wins', 0)
         team.setdefault('draws', 0)
         team.setdefault('losses', 0)
-        team.setdefault('players', [])
         team['points'] = team.get('wins',0)*3 + team.get('draws',0)
-    save_teams(teams)  # persist updated points
-    return render_template('index.html', teams=teams)
+
+    # Compute top scorer and top assister
+    top_scorer = None
+    top_assister = None
+    max_goals = -1
+    max_assists = -1
+
+    for team in teams:
+        for player in team['players']:
+            player.setdefault('goals', 0)
+            player.setdefault('assists', 0)
+            if player['goals'] > max_goals:
+                max_goals = player['goals']
+                top_scorer = player['name']
+            if player['assists'] > max_assists:
+                max_assists = player['assists']
+                top_assister = player['name']
+
+    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET','POST'])
@@ -65,18 +84,33 @@ def team_page(team_name):
     team.setdefault('players', [])
     team.setdefault('temp_lineup', [])
     team.setdefault('confirmed_lineups', [])
-    team.setdefault('played', 0)
-    team.setdefault('wins', 0)
-    team.setdefault('draws', 0)
-    team.setdefault('losses', 0)
+    team.setdefault('played',0)
+    team.setdefault('wins',0)
+    team.setdefault('draws',0)
+    team.setdefault('losses',0)
     team.setdefault('points', team.get('wins',0)*3 + team.get('draws',0))
 
-    if request.method=='POST':
+    if request.method == 'POST':
         req_type = request.form.get('request_type')
+        user_name = request.form.get('user_name')
+        if not user_name:
+            flash("You must enter your name to submit a request.")
+            return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
+
         requests_data = load_requests()
-        new_request = {"id": len(requests_data)+1, "user": request.form.get('user_name', ''), "team": team_name,
-                       "type": req_type, "lineup": None, "player": None, "goals": None, "assists": None,
-                       "date": None, "stat": None, "increment": None}
+        new_request = {
+            "id": len(requests_data)+1,
+            "user": user_name,
+            "team": team_name,
+            "type": req_type,
+            "lineup": None,
+            "player": None,
+            "goals": None,
+            "assists": None,
+            "date": None,
+            "stat": None,
+            "increment": None
+        }
 
         if req_type=='lineup':
             lineup_date = request.form.get('lineup_date')
@@ -101,7 +135,7 @@ def team_page(team_name):
 
         requests_data.append(new_request)
         save_requests(requests_data)
-        flash("Request sent!")
+        flash("Request sent for admin approval!")
         return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
 
     return render_template('team.html', team=team)
@@ -114,11 +148,11 @@ def player_page(team_name, player_name):
     teams = load_teams()
     team = next((t for t in teams if t['name']==team_name), None)
     if not team:
-        return f"Team {team_name} not found!", 404
+        return f"Team {team_name} not found!",404
 
     player = next((p for p in team.get('players',[]) if p['name']==player_name), None)
     if not player:
-        return f"Player {player_name} not found in {team_name}!", 404
+        return f"Player {player_name} not found in {team_name}!",404
 
     player.setdefault('goals',0)
     player.setdefault('assists',0)
@@ -129,13 +163,26 @@ def player_page(team_name, player_name):
         try: assists = int(request.form.get('assists', player['assists']))
         except: assists = player['assists']
 
+        user_name = request.form.get('user_name')
+        if not user_name:
+            flash("You must enter your name to submit a request.")
+            return redirect(url_for('player_page', team_name=team_name.replace(' ','_'), player_name=player_name.replace(' ','_')))
+
         requests_data = load_requests()
-        new_request = {"id": len(requests_data)+1, "user": request.form.get('user_name',''), "team": team_name,
-                       "type": "player", "lineup": None, "player": player_name, "goals": goals, "assists": assists,
-                       "date": None}
+        new_request = {
+            "id": len(requests_data)+1,
+            "user": user_name,
+            "team": team_name,
+            "type": "player",
+            "lineup": None,
+            "player": player_name,
+            "goals": goals,
+            "assists": assists,
+            "date": None
+        }
         requests_data.append(new_request)
         save_requests(requests_data)
-        flash("Player stats request sent!")
+        flash("Player stats request sent for admin approval!")
         return redirect(url_for('player_page', team_name=team_name.replace(' ','_'), player_name=player_name.replace(' ','_')))
 
     return render_template('player.html', team=team, player=player)
@@ -144,7 +191,7 @@ def player_page(team_name, player_name):
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method=='POST':
-        if request.form.get('password') == ADMIN_PASSWORD:
+        if request.form.get('password')==ADMIN_PASSWORD:
             session['admin']=True
             flash("Logged in as admin!")
             return redirect(url_for('admin_requests'))
@@ -164,7 +211,7 @@ def approve_request(request_id):
     requests_data = load_requests()
     req = next((r for r in requests_data if r['id']==request_id), None)
     if not req:
-        flash("Request not found")
+        flash("Request not found.")
         return redirect(url_for('admin_requests'))
 
     teams = load_teams()
@@ -175,17 +222,17 @@ def approve_request(request_id):
         elif req['type']=='player':
             player = next((p for p in team.get('players',[]) if p['name']==req['player']), None)
             if player:
-                player['goals']=req['goals']
-                player['assists']=req['assists']
+                player['goals'] = req['goals']
+                player['assists'] = req['assists']
         elif req['type']=='update_stat':
             stat = req.get('stat')
             increment = req.get('increment',0)
             if stat in ['played','wins','draws','losses']:
-                team[stat] = max(0, team.get(stat,0)+increment)
+                team[stat] = max(0, team.get(stat,0) + increment)
                 team['points'] = team.get('wins',0)*3 + team.get('draws',0)
 
     save_teams(teams)
-    requests_data = [r for r in requests_data if r['id']!=request_id]
+    requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
     flash("Request approved!")
     return redirect(url_for('admin_requests'))
@@ -194,7 +241,7 @@ def approve_request(request_id):
 @login_required
 def deny_request(request_id):
     requests_data = load_requests()
-    requests_data = [r for r in requests_data if r['id']!=request_id]
+    requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
     flash("Request denied!")
     return redirect(url_for('admin_requests'))
