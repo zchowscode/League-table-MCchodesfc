@@ -44,6 +44,7 @@
         <td>{{ stat.capitalize() }}</td>
         <td>{{ team[stat] }}</td>
         <td>
+          <!-- Increment -->
           <form method="POST" class="inline">
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
@@ -51,6 +52,7 @@
             <input type="text" name="user_name" placeholder="Your Name" required>
             <button type="submit">⬆</button>
           </form>
+          <!-- Decrement -->
           {% if team[stat] > 0 %}
           <form method="POST" class="inline">
             <input type="hidden" name="request_type" value="update_stat">
@@ -92,7 +94,7 @@
           <a href="{{ url_for('player_page', team_name=team.name|replace(' ','_'), player_name=player|replace(' ','_')) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
-      <form method="POST" action="{{ url_for('admin_requests') }}">
+      <form method="POST">
         <input type="hidden" name="request_type" value="delete_lineup">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
         <input type="text" name="user_name" placeholder="Your Name" required>
