@@ -84,11 +84,11 @@
                 {% endif %}
             </td>
             <td>
-                <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST" style="display:inline;">
+                <form action="{{ url_for('admin_approve_request', request_id=req.id) }}" method="POST" style="display:inline;">
                     <input type="password" name="admin_password" placeholder="Admin Password" required>
                     <button type="submit" class="confirm-btn">Approve</button>
                 </form>
-                <form action="{{ url_for('deny_request', request_id=req.id) }}" method="POST" style="display:inline;">
+                <form action="{{ url_for('admin_deny_request', request_id=req.id) }}" method="POST" style="display:inline;">
                     <input type="password" name="admin_password" placeholder="Admin Password" required>
                     <button type="submit" class="deny-btn">Deny</button>
                 </form>
