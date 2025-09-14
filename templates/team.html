@@ -13,6 +13,17 @@
     th, td { padding:5px 10px; border:1px solid #555; text-align:center; }
     form.inline { display:inline; margin:0; }
   </style>
+  <script>
+    function copyUserName(form) {
+      const sharedName = document.getElementById('shared_user_name').value.trim();
+      if (!sharedName) {
+        alert("You must enter your name to submit the request.");
+        return false;
+      }
+      form.user_name.value = sharedName;
+      return true;
+    }
+  </script>
 </head>
 <body>
   <h2>{{ team.name }} - Team Page</h2>
@@ -33,6 +44,8 @@
   </div>
 
   <h3>Team Stats</h3>
+  <label>Your Name:</label>
+  <input type="text" id="shared_user_name" placeholder="Enter your name"><br><br>
   <table>
     <tr>
       <th>Stat</th>
@@ -45,20 +58,20 @@
         <td>{{ team[stat] }}</td>
         <td>
           <!-- Increment -->
-          <form method="POST" class="inline">
+          <form method="POST" class="inline" onsubmit="return copyUserName(this);">
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
             <input type="hidden" name="increment" value="1">
-            <input type="text" name="user_name" placeholder="Your Name" required>
+            <input type="hidden" name="user_name">
             <button type="submit">⬆</button>
           </form>
           <!-- Decrement -->
           {% if team[stat] > 0 %}
-          <form method="POST" class="inline">
+          <form method="POST" class="inline" onsubmit="return copyUserName(this);">
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
             <input type="hidden" name="increment" value="-1">
-            <input type="text" name="user_name" placeholder="Your Name" required>
+            <input type="hidden" name="user_name">
             <button type="submit">⬇</button>
           </form>
           {% endif %}
@@ -73,10 +86,9 @@
   </table>
 
   <h3>Request Lineup Update</h3>
-  <form method="POST">
+  <form method="POST" onsubmit="return copyUserName(this);">
     <input type="hidden" name="request_type" value="lineup">
-    <label>Your Name:</label>
-    <input type="text" name="user_name" required><br><br>
+    <input type="hidden" name="user_name">
     {% for i in range(8) %}
       <input type="text" name="lineup" value="{{ team.temp_lineup[i] if i < team.temp_lineup|length else '' }}" placeholder="Player {{ i+1 }}"><br>
     {% endfor %}
@@ -94,10 +106,10 @@
           <a href="{{ url_for('player_page', team_name=team.name|replace(' ','_'), player_name=player|replace(' ','_')) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
-      <form method="POST">
+      <form method="POST" onsubmit="return copyUserName(this);">
         <input type="hidden" name="request_type" value="delete_lineup">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
-        <input type="text" name="user_name" placeholder="Your Name" required>
+        <input type="hidden" name="user_name">
         <button type="submit">Request Delete</button>
       </form>
     {% endfor %}
