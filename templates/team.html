@@ -44,6 +44,7 @@
         <td>{{ stat.capitalize() }}</td>
         <td>{{ team[stat] }}</td>
         <td>
+          <!-- Increment -->
           <form method="POST" class="inline">
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
@@ -51,6 +52,7 @@
             <input type="text" name="user_name" placeholder="Your Name" required>
             <button type="submit">⬆</button>
           </form>
+          <!-- Decrement -->
           {% if team[stat] > 0 %}
           <form method="POST" class="inline">
             <input type="hidden" name="request_type" value="update_stat">
