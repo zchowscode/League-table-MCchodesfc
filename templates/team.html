@@ -25,7 +25,7 @@
   <h3>Players</h3>
   <div class="player-list">
     {% for player in team.players %}
-      <a href="{{ url_for('player_page', team_name=team.name, player_name=player.name) }}">{{ player.name }}</a>
+      <a href="{{ url_for('player_page', team_name=team.name|replace(' ', '_'), player_name=player.name|replace(' ', '_')) }}">{{ player.name }}</a>
     {% endfor %}
   </div>
 
@@ -50,11 +50,11 @@
       <p><strong>Date:</strong> {{ cl.date }}</p>
       <p><strong>Lineup:</strong>
         {% for player in cl.lineup %}
-          <a href="{{ url_for('player_page', team_name=team.name, player_name=player) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
+          <a href="{{ url_for('player_page', team_name=team.name|replace(' ', '_'), player_name=player|replace(' ', '_')) }}">{{ player }}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}
       </p>
       <!-- Request Delete Lineup -->
-      <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name) }}">
+      <form method="POST" action="{{ url_for('team_delete_lineup_request', team_name=team.name|replace(' ', '_')) }}">
         <input type="hidden" name="lineup_date" value="{{ cl.date }}">
         <button type="submit">Request Delete</button>
       </form>
