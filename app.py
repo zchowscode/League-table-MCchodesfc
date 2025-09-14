@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import json
-import os
+import json, os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -40,19 +39,18 @@ def login_required(func):
         return func(*args, **kwargs)
     return wrapper
 
-# -------------------- League Table -------------------- #
+# -------------------- Routes -------------------- #
 @app.route('/')
 def league_table():
     teams = load_teams()
     for team in teams:
-        team.setdefault('players', [])
-        # Ensure player is a dict
-        team['players'] = [{"name": p, "goals":0, "assists":0} if isinstance(p, str) else p for p in team['players']]
         team.setdefault('played', 0)
         team.setdefault('wins', 0)
         team.setdefault('draws', 0)
         team.setdefault('losses', 0)
+        team.setdefault('players', [])
         team['points'] = team.get('wins',0)*3 + team.get('draws',0)
+    save_teams(teams)  # persist updated points
     return render_template('index.html', teams=teams)
 
 # -------------------- Team Page -------------------- #
@@ -60,13 +58,11 @@ def league_table():
 def team_page(team_name):
     team_name = team_name.replace('_',' ')
     teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+    team = next((t for t in teams if t['name']==team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
 
-    # Ensure keys exist
     team.setdefault('players', [])
-    team['players'] = [{"name": p, "goals":0, "assists":0} if isinstance(p,str) else p for p in team['players']]
     team.setdefault('temp_lineup', [])
     team.setdefault('confirmed_lineups', [])
     team.setdefault('played', 0)
@@ -75,52 +71,37 @@ def team_page(team_name):
     team.setdefault('losses', 0)
     team.setdefault('points', team.get('wins',0)*3 + team.get('draws',0))
 
-    if request.method == 'POST':
+    if request.method=='POST':
         req_type = request.form.get('request_type')
-        user_name = request.form.get('user_name', '').strip()
-        if not user_name:
-            flash("You must enter your name.")
-            return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
-
         requests_data = load_requests()
-        new_request = {
-            "id": len(requests_data)+1,
-            "user": user_name,
-            "team": team_name,
-            "type": req_type,
-            "lineup": None,
-            "player": None,
-            "goals": None,
-            "assists": None,
-            "date": None,
-            "stat": None,
-            "increment": None
-        }
+        new_request = {"id": len(requests_data)+1, "user": request.form.get('user_name', ''), "team": team_name,
+                       "type": req_type, "lineup": None, "player": None, "goals": None, "assists": None,
+                       "date": None, "stat": None, "increment": None}
 
-        if req_type == 'lineup':
+        if req_type=='lineup':
             lineup_date = request.form.get('lineup_date')
             temp_lineup = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
             team['temp_lineup'] = temp_lineup
             new_request.update({"lineup": temp_lineup, "date": lineup_date})
 
-        elif req_type == 'player':
+        elif req_type=='player':
             player_name = request.form.get('player_name')
             try: goals = int(request.form.get('goals',0))
-            except: goals=0
+            except: goals = 0
             try: assists = int(request.form.get('assists',0))
-            except: assists=0
+            except: assists = 0
             new_request.update({"player": player_name, "goals": goals, "assists": assists})
 
-        elif req_type == 'update_stat':
+        elif req_type=='update_stat':
             stat = request.form.get('stat')
             try: increment = int(request.form.get('increment',0))
-            except: increment=0
+            except: increment = 0
             if stat in ['played','wins','draws','losses']:
                 new_request.update({"stat": stat, "increment": increment})
 
         requests_data.append(new_request)
         save_requests(requests_data)
-        flash("Request sent for admin approval.")
+        flash("Request sent!")
         return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
 
     return render_template('team.html', team=team)
@@ -134,32 +115,27 @@ def player_page(team_name, player_name):
     team = next((t for t in teams if t['name']==team_name), None)
     if not team:
         return f"Team {team_name} not found!", 404
-    team['players'] = [{"name": p, "goals":0, "assists":0} if isinstance(p,str) else p for p in team.get('players',[])]
-    player = next((p for p in team['players'] if p['name']==player_name), None)
-    if not player:
-        return f"Player {player_name} not found!", 404
 
-    if request.method == 'POST':
-        try: goals=int(request.form.get('goals',player['goals']))
-        except: goals=player['goals']
-        try: assists=int(request.form.get('assists',player['assists']))
-        except: assists=player['assists']
+    player = next((p for p in team.get('players',[]) if p['name']==player_name), None)
+    if not player:
+        return f"Player {player_name} not found in {team_name}!", 404
+
+    player.setdefault('goals',0)
+    player.setdefault('assists',0)
+
+    if request.method=='POST':
+        try: goals = int(request.form.get('goals', player['goals']))
+        except: goals = player['goals']
+        try: assists = int(request.form.get('assists', player['assists']))
+        except: assists = player['assists']
 
         requests_data = load_requests()
-        new_request = {
-            "id": len(requests_data)+1,
-            "user": "system",
-            "team": team_name,
-            "type": "player",
-            "lineup": None,
-            "player": player_name,
-            "goals": goals,
-            "assists": assists,
-            "date": None
-        }
+        new_request = {"id": len(requests_data)+1, "user": request.form.get('user_name',''), "team": team_name,
+                       "type": "player", "lineup": None, "player": player_name, "goals": goals, "assists": assists,
+                       "date": None}
         requests_data.append(new_request)
         save_requests(requests_data)
-        flash("Player stats request sent for admin approval.")
+        flash("Player stats request sent!")
         return redirect(url_for('player_page', team_name=team_name.replace(' ','_'), player_name=player_name.replace(' ','_')))
 
     return render_template('player.html', team=team, player=player)
@@ -168,7 +144,7 @@ def player_page(team_name, player_name):
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method=='POST':
-        if request.form.get('password')==ADMIN_PASSWORD:
+        if request.form.get('password') == ADMIN_PASSWORD:
             session['admin']=True
             flash("Logged in as admin!")
             return redirect(url_for('admin_requests'))
@@ -188,7 +164,7 @@ def approve_request(request_id):
     requests_data = load_requests()
     req = next((r for r in requests_data if r['id']==request_id), None)
     if not req:
-        flash("Request not found.")
+        flash("Request not found")
         return redirect(url_for('admin_requests'))
 
     teams = load_teams()
@@ -197,7 +173,7 @@ def approve_request(request_id):
         if req['type']=='lineup':
             team.setdefault('confirmed_lineups', []).append({'date': req['date'], 'lineup': req['lineup']})
         elif req['type']=='player':
-            player = next((p for p in team.get('players', []) if p['name']==req['player']), None)
+            player = next((p for p in team.get('players',[]) if p['name']==req['player']), None)
             if player:
                 player['goals']=req['goals']
                 player['assists']=req['assists']
@@ -223,5 +199,5 @@ def deny_request(request_id):
     flash("Request denied!")
     return redirect(url_for('admin_requests'))
 
-if __name__ == '__main__':
+if __name__=='__main__':
     app.run(debug=True)
