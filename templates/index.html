@@ -12,12 +12,18 @@
         tr:nth-child(even) { background: #f2f2f2; }
         a { color: blue; text-decoration: none; }
         a:hover { text-decoration: underline; }
+        .leaders { margin: 20px auto; width: 60%; text-align: center; }
+        .leaders h2 { margin: 10px 0; }
     </style>
 </head>
 <body>
     <h1>League Table - MCchodesFC</h1>
-    <h2>Top Scorer: {{ top_scorer }}</h2>
-    <h2>Top Assister: {{ top_assister }}</h2>
+
+    <div class="leaders">
+        <h2>Top Scorer: {{ top_scorer }} {% if top_scorer_goals is not none %} ({{ top_scorer_goals }}){% endif %}</h2>
+        <h2>Top Assister: {{ top_assister }} {% if top_assister_assists is not none %} ({{ top_assister_assists }}){% endif %}</h2>
+        <h2>Top GA: {{ top_ga }} {% if top_ga_total is not none %} ({{ top_ga_total }}){% endif %}</h2>
+    </div>
 
     <table>
         <thead>
@@ -35,7 +41,11 @@
             {% for team in teams %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td><a href="{{ url_for('team_page', team_name=team.name|replace(' ','_')) }}">{{ team.name }}</a></td>
+                <td>
+                    <a href="{{ url_for('team_page', team_name=team.name|replace(' ','_')) }}">
+                        {{ team.name }}
+                    </a>
+                </td>
                 <td>{{ team.get('played', team.wins + team.draws + team.losses) }}</td>
                 <td>{{ team.get('wins',0) }}</td>
                 <td>{{ team.get('draws',0) }}</td>
