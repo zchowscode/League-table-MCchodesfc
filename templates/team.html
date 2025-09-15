@@ -27,7 +27,7 @@
 
   <h3>Players</h3>
   <div class="player-list">
-    {% for player in team.players %}
+    {% for player in team.get('players', []) %}
       <a href="{{ url_for('player_page', team_name=team.name|replace(' ','_'), player_name=player.name|replace(' ','_')) }}">{{ player.name }}</a>
     {% endfor %}
   </div>
@@ -42,7 +42,7 @@
     {% for stat in ['played','wins','draws','losses'] %}
       <tr>
         <td>{{ stat.capitalize() }}</td>
-        <td>{{ team[stat] }}</td>
+        <td>{{ team.get(stat, 0) }}</td>
         <td>
           <!-- Increment -->
           <form method="POST" class="inline">
@@ -53,7 +53,7 @@
             <button type="submit">⬆</button>
           </form>
           <!-- Decrement -->
-          {% if team[stat] > 0 %}
+          {% if team.get(stat, 0) > 0 %}
           <form method="POST" class="inline">
             <input type="hidden" name="request_type" value="update_stat">
             <input type="hidden" name="stat" value="{{ stat }}">
@@ -67,7 +67,7 @@
     {% endfor %}
     <tr>
       <td>Points</td>
-      <td>{{ team.points }}</td>
+      <td>{{ team.get('points', 0) }}</td>
       <td>-</td>
     </tr>
   </table>
@@ -78,14 +78,14 @@
     <label>Your Name:</label>
     <input type="text" name="user_name" placeholder="Enter Your Name" required><br><br>
     {% for i in range(8) %}
-      <input type="text" name="lineup" value="{{ team.temp_lineup[i] if i < team.temp_lineup|length else '' }}" placeholder="Player {{ i+1 }}"><br>
+      <input type="text" name="lineup" value="{{ team.get('temp_lineup', []) | default([]) [i] if i < team.get('temp_lineup', []) | length else '' }}" placeholder="Player {{ i+1 }}"><br>
     {% endfor %}
     <label>Date:</label>
     <input type="date" name="lineup_date" required><br><br>
     <button type="submit">Send Request</button>
   </form>
 
-  {% if team.confirmed_lineups %}
+  {% if team.get('confirmed_lineups') %}
     <h3>Confirmed Lineups</h3>
     {% for cl in team.confirmed_lineups %}
       <p><strong>Date:</strong> {{ cl.date }}</p>
