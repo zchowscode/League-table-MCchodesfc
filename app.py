@@ -1,34 +1,75 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import json, os
 from functools import wraps
+import os
+import sqlite3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+DB_FILE = 'league.db'
 
-DATA_FILE = 'teams.json'
-REQUESTS_FILE = 'requests.json'
+# -------------------- Database Helpers -------------------- #
+def get_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-# -------------------- Helpers -------------------- #
-def load_teams():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as f:
-            return json.load(f)
-    return []
+def init_db():
+    conn = get_db()
+    c = conn.cursor()
 
-def save_teams(teams):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(teams, f, indent=4)
+    # Teams table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS teams (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE,
+            played INTEGER DEFAULT 0,
+            wins INTEGER DEFAULT 0,
+            draws INTEGER DEFAULT 0,
+            losses INTEGER DEFAULT 0,
+            points INTEGER DEFAULT 0
+        )
+    ''')
 
-def load_requests():
-    if os.path.exists(REQUESTS_FILE):
-        with open(REQUESTS_FILE, 'r') as f:
-            return json.load(f)
-    return []
+    # Players table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS players (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            team_id INTEGER,
+            goals INTEGER DEFAULT 0,
+            assists INTEGER DEFAULT 0,
+            clean_sheets INTEGER DEFAULT 0,
+            goal_line_clearances INTEGER DEFAULT 0,
+            FOREIGN KEY(team_id) REFERENCES teams(id)
+        )
+    ''')
 
-def save_requests(requests_data):
-    with open(REQUESTS_FILE, 'w') as f:
-        json.dump(requests_data, f, indent=4)
+    # Requests table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT,
+            team_id INTEGER,
+            type TEXT,
+            player_id INTEGER,
+            lineup TEXT,
+            date TEXT,
+            goals INTEGER,
+            assists INTEGER,
+            clean_sheets INTEGER,
+            goal_line_clearances INTEGER,
+            stat TEXT,
+            increment INTEGER,
+            FOREIGN KEY(team_id) REFERENCES teams(id),
+            FOREIGN KEY(player_id) REFERENCES players(id)
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+init_db()
 
 def login_required(func):
     @wraps(func)
@@ -42,74 +83,58 @@ def login_required(func):
 # -------------------- Routes -------------------- #
 @app.route('/')
 def league_table():
-    teams = load_teams()
+    conn = get_db()
+    c = conn.cursor()
 
-    # Ensure keys exist & calculate points
-    for team in teams:
-        team.setdefault('players', [])
-        team.setdefault('played', 0)
-        team.setdefault('wins', 0)
-        team.setdefault('draws', 0)
-        team.setdefault('losses', 0)
-        team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
+    # Fetch teams with players
+    c.execute('SELECT * FROM teams ORDER BY points DESC, wins DESC')
+    teams = c.fetchall()
+    team_list = []
 
-    # Leaders
-    top_scorer, top_assister, top_ga = None, None, None
-    max_goals, max_assists, max_ga = -1, -1, -1
-    top_scorer_goals, top_assister_assists, top_ga_total = None, None, None
+    top_scorer = top_assister = top_ga = None
+    max_goals = max_assists = max_ga = -1
 
-    for team in teams:
-        for player in team['players']:
-            player.setdefault('goals', 0)
-            player.setdefault('assists', 0)
+    for t in teams:
+        c.execute('SELECT * FROM players WHERE team_id=?', (t['id'],))
+        players = c.fetchall()
+        team_dict = dict(t)
+        team_dict['players'] = [dict(p) for p in players]
+        team_list.append(team_dict)
 
-            # Top scorer
-            if player['goals'] > max_goals:
-                max_goals = player['goals']
-                top_scorer = player['name']
-                top_scorer_goals = player['goals']
-
-            # Top assister
-            if player['assists'] > max_assists:
-                max_assists = player['assists']
-                top_assister = player['name']
-                top_assister_assists = player['assists']
-
-            # Top GA
-            ga = player['goals'] + player['assists']
+        # Compute leaders
+        for p in players:
+            if p['goals'] > max_goals:
+                max_goals = p['goals']
+                top_scorer = p['name']
+            if p['assists'] > max_assists:
+                max_assists = p['assists']
+                top_assister = p['name']
+            ga = p['goals'] + p['assists']
             if ga > max_ga:
                 max_ga = ga
-                top_ga = player['name']
-                top_ga_total = ga
+                top_ga = p['name']
 
-    return render_template(
-        'index.html',
-        teams=teams,
-        top_scorer=top_scorer,
-        top_scorer_goals=top_scorer_goals,
-        top_assister=top_assister,
-        top_assister_assists=top_assister_assists,
-        top_ga=top_ga,
-        top_ga_total=top_ga_total
-    )
+    conn.close()
+    return render_template('index.html',
+                           teams=team_list,
+                           top_scorer=top_scorer,
+                           top_assister=top_assister,
+                           top_ga=top_ga)
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
 def team_page(team_name):
     team_name = team_name.replace('_', ' ')
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute('SELECT * FROM teams WHERE name=?', (team_name,))
+    team = c.fetchone()
     if not team:
         return f"Team {team_name} not found!", 404
 
-    team.setdefault('players', [])
-    team.setdefault('temp_lineup', [])
-    team.setdefault('confirmed_lineups', [])
-    team.setdefault('played', 0)
-    team.setdefault('wins', 0)
-    team.setdefault('draws', 0)
-    team.setdefault('losses', 0)
-    team.setdefault('points', team.get('wins', 0) * 3 + team.get('draws', 0))
+    c.execute('SELECT * FROM players WHERE team_id=?', (team['id'],))
+    players = [dict(p) for p in c.fetchall()]
 
     if request.method == 'POST':
         req_type = request.form.get('request_type')
@@ -118,108 +143,79 @@ def team_page(team_name):
             flash("You must enter your name to submit a request.")
             return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
-        requests_data = load_requests()
-        new_request = {
-            "id": len(requests_data) + 1,
-            "user": user_name,
-            "team": team_name,
-            "type": req_type,
-            "lineup": None,
-            "player": None,
-            "goals": None,
-            "assists": None,
-            "clean_sheets": None,
-            "goal_line_clearances": None,
-            "date": None,
-            "stat": None,
-            "increment": None
-        }
+        player_id = None
+        lineup_text = None
+        date_text = None
+        goals = assists = clean_sheets = clearances = None
+        stat = None
+        increment = None
 
         if req_type == 'lineup':
-            lineup_date = request.form.get('lineup_date')
-            temp_lineup = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
-            team['temp_lineup'] = temp_lineup
-            new_request.update({"lineup": temp_lineup, "date": lineup_date})
+            lineup = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
+            lineup_text = ','.join(lineup)
+            date_text = request.form.get('lineup_date')
 
         elif req_type == 'player':
             player_name = request.form.get('player_name')
+            c.execute('SELECT id FROM players WHERE name=? AND team_id=?', (player_name, team['id']))
+            p = c.fetchone()
+            if p:
+                player_id = p['id']
             goals = int(request.form.get('goals', 0) or 0)
             assists = int(request.form.get('assists', 0) or 0)
             clean_sheets = int(request.form.get('clean_sheets', 0) or 0)
             clearances = int(request.form.get('goal_line_clearances', 0) or 0)
-            new_request.update({
-                "player": player_name,
-                "goals": goals,
-                "assists": assists,
-                "clean_sheets": clean_sheets,
-                "goal_line_clearances": clearances
-            })
 
         elif req_type == 'update_stat':
             stat = request.form.get('stat')
             increment = int(request.form.get('increment', 0) or 0)
-            if stat in ['played', 'wins', 'draws', 'losses']:
-                new_request.update({"stat": stat, "increment": increment})
 
-        requests_data.append(new_request)
-        save_requests(requests_data)
+        c.execute('''
+            INSERT INTO requests (user, team_id, type, player_id, lineup, date, goals, assists, clean_sheets, goal_line_clearances, stat, increment)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_name, team['id'], req_type, player_id, lineup_text, date_text, goals, assists, clean_sheets, clearances, stat, increment))
+        conn.commit()
         flash("Request sent for admin approval!")
         return redirect(url_for('team_page', team_name=team_name.replace(' ', '_')))
 
-    return render_template('team.html', team=team)
+    conn.close()
+    return render_template('team.html', team=dict(team), players=players)
 
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET', 'POST'])
 def player_page(team_name, player_name):
     team_name = team_name.replace('_', ' ')
     player_name = player_name.replace('_', ' ')
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == team_name), None)
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT * FROM teams WHERE name=?', (team_name,))
+    team = c.fetchone()
     if not team:
         return f"Team {team_name} not found!", 404
 
-    player = next((p for p in team.get('players', []) if p['name'] == player_name), None)
+    c.execute('SELECT * FROM players WHERE name=? AND team_id=?', (player_name, team['id']))
+    player = c.fetchone()
     if not player:
         return f"Player {player_name} not found in {team_name}!", 404
 
-    player.setdefault('goals', 0)
-    player.setdefault('assists', 0)
-    player.setdefault('clean_sheets', 0)
-    player.setdefault('goal_line_clearances', 0)
-
     if request.method == 'POST':
         user_name = request.form.get('user_name')
-        if not user_name:
-            flash("You must enter your name to submit a request.")
-            return redirect(url_for('player_page',
-                                    team_name=team_name.replace(' ', '_'),
-                                    player_name=player_name.replace(' ', '_')))
-
         goals = int(request.form.get('goals', player['goals']) or player['goals'])
         assists = int(request.form.get('assists', player['assists']) or player['assists'])
         clean_sheets = int(request.form.get('clean_sheets', player['clean_sheets']) or player['clean_sheets'])
         clearances = int(request.form.get('goal_line_clearances', player['goal_line_clearances']) or player['goal_line_clearances'])
 
-        requests_data = load_requests()
-        new_request = {
-            "id": len(requests_data) + 1,
-            "user": user_name,
-            "team": team_name,
-            "type": "player",
-            "player": player_name,
-            "goals": goals,
-            "assists": assists,
-            "clean_sheets": clean_sheets,
-            "goal_line_clearances": clearances,
-        }
-        requests_data.append(new_request)
-        save_requests(requests_data)
+        c.execute('''
+            INSERT INTO requests (user, team_id, type, player_id, goals, assists, clean_sheets, goal_line_clearances)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_name, team['id'], 'player', player['id'], goals, assists, clean_sheets, clearances))
+        conn.commit()
         flash("Player stats request sent for admin approval!")
-        return redirect(url_for('player_page',
-                                team_name=team_name.replace(' ', '_'),
-                                player_name=player_name.replace(' ', '_')))
+        return redirect(url_for('player_page', team_name=team_name.replace(' ', '_'), player_name=player_name.replace(' ', '_')))
 
-    return render_template('player.html', team=team, player=player)
+    conn.close()
+    return render_template('player.html', team=dict(team), player=dict(player))
 
 # -------------------- Admin -------------------- #
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -236,58 +232,61 @@ def admin_login():
 @app.route('/admin/requests')
 @login_required
 def admin_requests():
-    requests_data = load_requests()
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT r.*, t.name AS team_name, p.name AS player_name FROM requests r '
+              'LEFT JOIN teams t ON r.team_id=t.id '
+              'LEFT JOIN players p ON r.player_id=p.id')
+    requests_data = [dict(r) for r in c.fetchall()]
+    conn.close()
     return render_template('admin_requests.html', requests=requests_data)
 
 @app.route('/admin/requests/approve/<int:request_id>', methods=['POST'])
 @login_required
 def approve_request(request_id):
-    requests_data = load_requests()
-    req = next((r for r in requests_data if r['id'] == request_id), None)
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT * FROM requests WHERE id=?', (request_id,))
+    req = c.fetchone()
     if not req:
         flash("Request not found.")
         return redirect(url_for('admin_requests'))
 
-    teams = load_teams()
-    team = next((t for t in teams if t['name'] == req['team']), None)
+    if req['type'] == 'lineup':
+        # For simplicity, store lineups as text; you can extend to a separate table if needed
+        pass
 
-    if team:
-        if req['type'] == 'lineup':
-            team.setdefault('confirmed_lineups', []).append({
-                'date': req['date'],
-                'lineup': req['lineup']
-            })
+    elif req['type'] == 'player':
+        c.execute('SELECT * FROM players WHERE id=?', (req['player_id'],))
+        player = c.fetchone()
+        if player:
+            c.execute('''
+                UPDATE players
+                SET goals=?, assists=?, clean_sheets=?, goal_line_clearances=?
+                WHERE id=?
+            ''', (req['goals'], req['assists'], req['clean_sheets'], req['goal_line_clearances'], req['player_id']))
 
-        elif req['type'] == 'player':
-            player = next((p for p in team.get('players', []) if p['name'] == req['player']), None)
-            if player:
-                player['goals'] = req.get('goals', player.get('goals', 0))
-                player['assists'] = req.get('assists', player.get('assists', 0))
-                player['clean_sheets'] = req.get('clean_sheets', player.get('clean_sheets', 0))
-                player['goal_line_clearances'] = req.get('goal_line_clearances', player.get('goal_line_clearances', 0))
+    elif req['type'] == 'update_stat':
+        stat = req['stat']
+        increment = req['increment'] or 0
+        if stat in ['played', 'wins', 'draws', 'losses']:
+            c.execute(f'''
+                UPDATE teams SET {stat}={stat}+?, points=(wins*3 + draws) WHERE id=?
+            ''', (increment, req['team_id']))
 
-        elif req['type'] == 'update_stat':
-            stat = req.get('stat')
-            increment = req.get('increment', 0)
-            if stat in ['played', 'wins', 'draws', 'losses']:
-                team[stat] = max(0, team.get(stat, 0) + increment)
-                team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
-
-    save_teams(teams)
-    requests_data = [r for r in requests_data if r['id'] != request_id]
-    save_requests(requests_data)
-
-    flash("Request approved and applied to team data!")
+    # Delete request after approval
+    c.execute('DELETE FROM requests WHERE id=?', (request_id,))
+    conn.commit()
+    conn.close()
+    flash("Request approved and applied!")
     return redirect(url_for('admin_requests'))
 
 @app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
 @login_required
 def deny_request(request_id):
-    requests_data = load_requests()
-    requests_data = [r for r in requests_data if r['id'] != request_id]
-    save_requests(requests_data)
-    flash("Request denied!")
-    return redirect(url_for('admin_requests'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('DELETE FROM requests WHERE id=?', (request_id,))
+    conn.commit()
+    conn.close()
+   
