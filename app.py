@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from functools import wraps
 import os
 import sqlite3
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -71,6 +72,44 @@ def init_db():
 
 init_db()
 
+# -------------------- Populate DB from JSON if empty -------------------- #
+def populate_db_from_json():
+    conn = get_db()
+    c = conn.cursor()
+
+    # Check if there are any teams
+    c.execute('SELECT COUNT(*) FROM teams')
+    if c.fetchone()[0] > 0:
+        conn.close()
+        return  # DB already populated
+
+    # Load teams from JSON
+    try:
+        with open('teams.json', 'r') as f:
+            teams_data = json.load(f)
+    except FileNotFoundError:
+        print("teams.json not found. Skipping DB population.")
+        conn.close()
+        return
+
+    for team in teams_data:
+        c.execute('INSERT INTO teams (name, played, wins, draws, losses, points) VALUES (?, ?, ?, ?, ?, ?)',
+                  (team['name'], team.get('played',0), team.get('wins',0), team.get('draws',0), team.get('losses',0), 0))
+        team_id = c.lastrowid
+
+        for player in team.get('players', []):
+            c.execute('''
+                INSERT INTO players (name, team_id, goals, assists, clean_sheets, goal_line_clearances)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (player['name'], team_id, player.get('goals',0), player.get('assists',0), 0, 0))
+
+    conn.commit()
+    conn.close()
+    print("Database populated from teams.json!")
+
+populate_db_from_json()
+
+# -------------------- Login Decorator -------------------- #
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -86,7 +125,6 @@ def league_table():
     conn = get_db()
     c = conn.cursor()
 
-    # Fetch teams with players
     c.execute('SELECT * FROM teams ORDER BY points DESC, wins DESC')
     teams = c.fetchall()
     team_list = []
@@ -101,7 +139,6 @@ def league_table():
         team_dict['players'] = [dict(p) for p in players]
         team_list.append(team_dict)
 
-        # Compute leaders
         for p in players:
             if p['goals'] > max_goals:
                 max_goals = p['goals']
@@ -253,9 +290,7 @@ def approve_request(request_id):
         return redirect(url_for('admin_requests'))
 
     if req['type'] == 'lineup':
-        # For simplicity, store lineups as text; you can extend to a separate table if needed
         pass
-
     elif req['type'] == 'player':
         c.execute('SELECT * FROM players WHERE id=?', (req['player_id'],))
         player = c.fetchone()
@@ -265,7 +300,6 @@ def approve_request(request_id):
                 SET goals=?, assists=?, clean_sheets=?, goal_line_clearances=?
                 WHERE id=?
             ''', (req['goals'], req['assists'], req['clean_sheets'], req['goal_line_clearances'], req['player_id']))
-
     elif req['type'] == 'update_stat':
         stat = req['stat']
         increment = req['increment'] or 0
@@ -274,7 +308,6 @@ def approve_request(request_id):
                 UPDATE teams SET {stat}={stat}+?, points=(wins*3 + draws) WHERE id=?
             ''', (increment, req['team_id']))
 
-    # Delete request after approval
     c.execute('DELETE FROM requests WHERE id=?', (request_id,))
     conn.commit()
     conn.close()
@@ -289,4 +322,3 @@ def deny_request(request_id):
     c.execute('DELETE FROM requests WHERE id=?', (request_id,))
     conn.commit()
     conn.close()
-   
