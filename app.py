@@ -53,7 +53,7 @@ def league_table():
         team.setdefault('losses', 0)
         team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
 
-    # Compute top scorer and top assister
+    # Compute top scorer and assister
     top_scorer, top_assister = None, None
     max_goals, max_assists = -1, -1
 
@@ -103,6 +103,8 @@ def team_page(team_name):
             "player": None,
             "goals": None,
             "assists": None,
+            "clean_sheets": None,
+            "goal_line_clearances": None,
             "date": None,
             "stat": None,
             "increment": None
@@ -116,22 +118,21 @@ def team_page(team_name):
 
         elif req_type == 'player':
             player_name = request.form.get('player_name')
-            try:
-                goals = int(request.form.get('goals', 0))
-            except:
-                goals = 0
-            try:
-                assists = int(request.form.get('assists', 0))
-            except:
-                assists = 0
-            new_request.update({"player": player_name, "goals": goals, "assists": assists})
+            goals = int(request.form.get('goals', 0) or 0)
+            assists = int(request.form.get('assists', 0) or 0)
+            clean_sheets = int(request.form.get('clean_sheets', 0) or 0)
+            clearances = int(request.form.get('goal_line_clearances', 0) or 0)
+            new_request.update({
+                "player": player_name,
+                "goals": goals,
+                "assists": assists,
+                "clean_sheets": clean_sheets,
+                "goal_line_clearances": clearances
+            })
 
         elif req_type == 'update_stat':
             stat = request.form.get('stat')
-            try:
-                increment = int(request.form.get('increment', 0))
-            except:
-                increment = 0
+            increment = int(request.form.get('increment', 0) or 0)
             if stat in ['played', 'wins', 'draws', 'losses']:
                 new_request.update({"stat": stat, "increment": increment})
 
@@ -158,17 +159,10 @@ def player_page(team_name, player_name):
 
     player.setdefault('goals', 0)
     player.setdefault('assists', 0)
+    player.setdefault('clean_sheets', 0)
+    player.setdefault('goal_line_clearances', 0)
 
     if request.method == 'POST':
-        try:
-            goals = int(request.form.get('goals', player['goals']))
-        except:
-            goals = player['goals']
-        try:
-            assists = int(request.form.get('assists', player['assists']))
-        except:
-            assists = player['assists']
-
         user_name = request.form.get('user_name')
         if not user_name:
             flash("You must enter your name to submit a request.")
@@ -176,17 +170,22 @@ def player_page(team_name, player_name):
                                     team_name=team_name.replace(' ', '_'),
                                     player_name=player_name.replace(' ', '_')))
 
+        goals = int(request.form.get('goals', player['goals']) or player['goals'])
+        assists = int(request.form.get('assists', player['assists']) or player['assists'])
+        clean_sheets = int(request.form.get('clean_sheets', player['clean_sheets']) or player['clean_sheets'])
+        clearances = int(request.form.get('goal_line_clearances', player['goal_line_clearances']) or player['goal_line_clearances'])
+
         requests_data = load_requests()
         new_request = {
             "id": len(requests_data) + 1,
             "user": user_name,
             "team": team_name,
             "type": "player",
-            "lineup": None,
             "player": player_name,
             "goals": goals,
             "assists": assists,
-            "date": None
+            "clean_sheets": clean_sheets,
+            "goal_line_clearances": clearances,
         }
         requests_data.append(new_request)
         save_requests(requests_data)
@@ -237,8 +236,10 @@ def approve_request(request_id):
         elif req['type'] == 'player':
             player = next((p for p in team.get('players', []) if p['name'] == req['player']), None)
             if player:
-                player['goals'] = req['goals']
-                player['assists'] = req['assists']
+                player['goals'] = req.get('goals', player.get('goals', 0))
+                player['assists'] = req.get('assists', player.get('assists', 0))
+                player['clean_sheets'] = req.get('clean_sheets', player.get('clean_sheets', 0))
+                player['goal_line_clearances'] = req.get('goal_line_clearances', player.get('goal_line_clearances', 0))
 
         elif req['type'] == 'update_stat':
             stat = req.get('stat')
@@ -247,10 +248,7 @@ def approve_request(request_id):
                 team[stat] = max(0, team.get(stat, 0) + increment)
                 team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
 
-    # Save updated teams data
     save_teams(teams)
-
-    # Remove request after approval
     requests_data = [r for r in requests_data if r['id'] != request_id]
     save_requests(requests_data)
 
