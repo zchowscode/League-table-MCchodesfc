@@ -53,20 +53,45 @@ def league_table():
         team.setdefault('losses', 0)
         team['points'] = team.get('wins', 0) * 3 + team.get('draws', 0)
 
-    # Compute top scorer and assister
-    top_scorer, top_assister = None, None
-    max_goals, max_assists = -1, -1
+    # Leaders
+    top_scorer, top_assister, top_ga = None, None, None
+    max_goals, max_assists, max_ga = -1, -1, -1
+    top_scorer_goals, top_assister_assists, top_ga_total = None, None, None
 
     for team in teams:
         for player in team['players']:
             player.setdefault('goals', 0)
             player.setdefault('assists', 0)
-            if player['goals'] > max_goals:
-                max_goals, top_scorer = player['goals'], player['name']
-            if player['assists'] > max_assists:
-                max_assists, top_assister = player['assists'], player['name']
 
-    return render_template('index.html', teams=teams, top_scorer=top_scorer, top_assister=top_assister)
+            # Top scorer
+            if player['goals'] > max_goals:
+                max_goals = player['goals']
+                top_scorer = player['name']
+                top_scorer_goals = player['goals']
+
+            # Top assister
+            if player['assists'] > max_assists:
+                max_assists = player['assists']
+                top_assister = player['name']
+                top_assister_assists = player['assists']
+
+            # Top GA
+            ga = player['goals'] + player['assists']
+            if ga > max_ga:
+                max_ga = ga
+                top_ga = player['name']
+                top_ga_total = ga
+
+    return render_template(
+        'index.html',
+        teams=teams,
+        top_scorer=top_scorer,
+        top_scorer_goals=top_scorer_goals,
+        top_assister=top_assister,
+        top_assister_assists=top_assister_assists,
+        top_ga=top_ga,
+        top_ga_total=top_ga_total
+    )
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET', 'POST'])
