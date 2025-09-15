@@ -83,6 +83,14 @@
         <td>Assists</td>
         <td><input type="number" name="assists" value="{{ player.assists | default(0) }}" min="0" required></td>
       </tr>
+      <tr>
+        <td>Clean Sheets</td>
+        <td><input type="number" name="clean_sheets" value="{{ player.clean_sheets | default(0) }}" min="0" required></td>
+      </tr>
+      <tr>
+        <td>Goal Line Clearances</td>
+        <td><input type="number" name="goal_line_clearances" value="{{ player.goal_line_clearances | default(0) }}" min="0" required></td>
+      </tr>
     </table>
 
     <button type="submit">Send Stat Update Request</button>
