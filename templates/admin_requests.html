@@ -71,8 +71,13 @@
             <td>
                 {% if req.type == 'lineup' %}
                     {{ req.lineup | join(', ') }}
+                {% elif req.type == 'player' %}
+                    Goals: {{ req.goals }},
+                    Assists: {{ req.assists }},
+                    Clean Sheets: {{ req.clean_sheets }},
+                    Goal Line Clearances: {{ req.goal_line_clearances }}
                 {% else %}
-                    Goals: {{ req.goals }}, Assists: {{ req.assists }}
+                    {{ req.stat }} +{{ req.increment }}
                 {% endif %}
             </td>
             <td>
