@@ -1,1 +1,71 @@
+import json
+import sqlite3
 
+# Load your teams.json
+with open('teams.json', 'r') as f:
+    teams_data = json.load(f)
+
+# Connect to league.db (it will create if it doesn't exist)
+conn = sqlite3.connect('league.db')
+c = conn.cursor()
+
+# --- Create tables ---
+c.execute('''
+CREATE TABLE IF NOT EXISTS teams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE,
+    played INTEGER DEFAULT 0,
+    wins INTEGER DEFAULT 0,
+    draws INTEGER DEFAULT 0,
+    losses INTEGER DEFAULT 0,
+    points INTEGER DEFAULT 0
+)
+''')
+
+c.execute('''
+CREATE TABLE IF NOT EXISTS players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    team_id INTEGER,
+    goals INTEGER DEFAULT 0,
+    assists INTEGER DEFAULT 0,
+    clean_sheets INTEGER DEFAULT 0,
+    goal_line_clearances INTEGER DEFAULT 0,
+    FOREIGN KEY(team_id) REFERENCES teams(id)
+)
+''')
+
+# --- Insert teams and players ---
+for team in teams_data:
+    # Calculate played and points
+    played = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
+    points = team.get('wins', 0) * 3 + team.get('draws', 0)
+
+    # Insert team
+    c.execute('''
+        INSERT OR IGNORE INTO teams (name, wins, draws, losses, played, points)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (team['name'], team.get('wins', 0), team.get('draws', 0),
+          team.get('losses', 0), played, points))
+
+    # Get team_id
+    c.execute('SELECT id FROM teams WHERE name=?', (team['name'],))
+    team_id = c.fetchone()[0]
+
+    # Insert players
+    for player in team['players']:
+        c.execute('''
+            INSERT OR IGNORE INTO players (name, team_id, goals, assists, clean_sheets, goal_line_clearances)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            player['name'],
+            team_id,
+            player.get('goals', 0),
+            player.get('assists', 0),
+            player.get('clean_sheets', 0),
+            player.get('goal_line_clearances', 0)
+        ))
+
+conn.commit()
+conn.close()
+print("All teams and players imported into league.db successfully!")
