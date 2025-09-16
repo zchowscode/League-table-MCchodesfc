@@ -46,45 +46,39 @@ def login_required(func):
 def league_table():
     teams = load_teams()
 
-    top_scorer = top_assister = top_ga_player = None
-    top_scorer_goals = top_assister_assists = top_ga_total = 0
-
-    # Compute stats per team
+    # Aggregate player stats across all teams
+    player_stats = {}
     for team in teams:
-        # Points and played
-        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
-        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
-
-        # Goals for: sum of team players' goals
-        team['goals_for'] = sum(p.get('goals', 0) for p in team.get('players', []))
-
-        # Goals against: sum of opponent goals in team's matches
-        team['goals_against'] = sum(m.get('away_score', 0) if m.get('opponent') != team['name'] else m.get('home_score',0) 
-                                    for m in team.get('matches', []))
-
-        # Top scorer/assister/GA
         for p in team.get('players', []):
-            if p.get('goals', 0) > top_scorer_goals:
-                top_scorer = p['name']
-                top_scorer_goals = p['goals']
-            if p.get('assists', 0) > top_assister_assists:
-                top_assister = p['name']
-                top_assister_assists = p['assists']
-            ga = p.get('goals',0) + p.get('assists',0)
-            if ga > top_ga_total:
-                top_ga_player = p['name']
-                top_ga_total = ga
+            name = p['name']
+            if name not in player_stats:
+                player_stats[name] = {'goals': 0, 'assists': 0, 'ga': 0}
+            player_stats[name]['goals'] += p.get('goals', 0)
+            player_stats[name]['assists'] += p.get('assists', 0)
+            player_stats[name]['ga'] += p.get('goals', 0) + p.get('assists', 0)
 
-    # Sort by points, then wins, then goals_for
-    teams_sorted = sorted(teams, key=lambda t: (-t['points'], -t.get('wins',0), -t['goals_for']))
+    # Determine top scorer, top assister, top GA
+    top_scorer = max(player_stats.items(), key=lambda x: x[1]['goals'], default=(None, {'goals': 0}))
+    top_assister = max(player_stats.items(), key=lambda x: x[1]['assists'], default=(None, {'assists': 0}))
+    top_ga = max(player_stats.items(), key=lambda x: x[1]['ga'], default=(None, {'ga': 0}))
 
-    return render_template('index.html', teams=teams_sorted,
-                           top_scorer=top_scorer,
-                           top_scorer_goals=top_scorer_goals,
-                           top_assister=top_assister,
-                           top_assister_assists=top_assister_assists,
-                           top_ga=top_ga_player,
-                           top_ga_total=top_ga_total)
+    # Calculate team stats
+    for team in teams:
+        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
+        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
+        team['goals_for'] = sum(p.get('goals', 0) for p in team.get('players', []))
+        team['goals_against'] = sum(p.get('goal_line_clear', 0) for p in team.get('players', []))
+
+    teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('wins',0)))
+
+    return render_template('index.html',
+                           teams=teams_sorted,
+                           top_scorer=top_scorer[0],
+                           top_scorer_goals=top_scorer[1]['goals'],
+                           top_assister=top_assister[0],
+                           top_assister_assists=top_assister[1]['assists'],
+                           top_ga=top_ga[0],
+                           top_ga_total=top_ga[1]['ga'])
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET','POST'])
