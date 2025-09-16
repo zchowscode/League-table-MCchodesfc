@@ -14,7 +14,7 @@ def load_teams():
     try:
         with open(TEAM_FILE, 'r') as f:
             data = json.load(f)
-            return data.get('teams', [])
+            return data.get('teams', [])  # extract list of teams
     except FileNotFoundError:
         return []
 
@@ -60,22 +60,22 @@ def league_table():
 
         # Goals against
         team['goals_against'] = sum(
-            (m.get('away_score',0) if team['name'] != m.get('home_team','') else m.get('home_score',0))
+            (m.get('away_score',0) if team['name'] != m.get('home_team','') else m.get('home_score',0)) 
             for m in matches
         )
 
         # Points calculation
         team['wins'] = sum(
             1 for m in matches if (
-                (m.get('home_team')==team['name'] and m.get('home_score',0) > m.get('away_score',0)) or
-                (m.get('away_team')==team['name'] and m.get('away_score',0) > m.get('home_score',0))
+                (m.get('home_team', team.get('name'))==team['name'] and m.get('home_score',0) > m.get('away_score',0)) or
+                (m.get('away_team', team.get('name'))==team['name'] and m.get('away_score',0) > m.get('home_score',0))
             )
         )
         team['draws'] = sum(1 for m in matches if m.get('home_score',0)==m.get('away_score',0))
         team['losses'] = sum(
             1 for m in matches if (
-                (m.get('home_team')==team['name'] and m.get('home_score',0) < m.get('away_score',0)) or
-                (m.get('away_team')==team['name'] and m.get('away_score',0) < m.get('home_score',0))
+                (m.get('home_team', team.get('name'))==team['name'] and m.get('home_score',0) < m.get('away_score',0)) or
+                (m.get('away_team', team.get('name'))==team['name'] and m.get('away_score',0) < m.get('home_score',0))
             )
         )
         team['points'] = team['wins']*3 + team['draws']
@@ -136,7 +136,7 @@ def team_page(team_name):
                     'player_name': player_name,
                     'goals': int(request.form.get('goals',0) or 0),
                     'assists': int(request.form.get('assists',0) or 0),
-                    'clean_sheets': int(request.form.get('clean_sheets',0) or 0),
+                    'clean_sheet': int(request.form.get('clean_sheet',0) or 0),
                     'goal_line_clear': int(request.form.get('goal_line_clear',0) or 0)
                 })
         elif req_type=='update_stat':
@@ -174,7 +174,7 @@ def player_page(team_name, player_name):
             'player_name': player_name,
             'goals': int(request.form.get('goals', player.get('goals',0)) or player.get('goals',0)),
             'assists': int(request.form.get('assists', player.get('assists',0)) or player.get('assists',0)),
-            'clean_sheets': int(request.form.get('clean_sheets', player.get('clean_sheets',0)) or player.get('clean_sheets',0)),
+            'clean_sheet': int(request.form.get('clean_sheet', player.get('clean_sheet',0)) or player.get('clean_sheet',0)),
             'goal_line_clear': int(request.form.get('goal_line_clear', player.get('goal_line_clear',0)) or player.get('goal_line_clear',0))
         }
         requests.append(new_request)
@@ -225,7 +225,7 @@ def approve_request(request_id):
             player.update({
                 'goals': req.get('goals', player.get('goals',0)),
                 'assists': req.get('assists', player.get('assists',0)),
-                'clean_sheets': req.get('clean_sheets', player.get('clean_sheets',0)),
+                'clean_sheet': req.get('clean_sheet', player.get('clean_sheet',0)),
                 'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear',0))
             })
     elif req['type']=='update_stat':
