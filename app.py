@@ -41,58 +41,49 @@ def login_required(func):
         return func(*args, **kwargs)
     return wrapper
 
-# -------------------- Routes -------------------- #
+# -------------------- League Table -------------------- #
 @app.route('/')
 def league_table():
     teams = load_teams()
-    top_scorer = top_assister = top_ga_player = None
-    top_scorer_goals = top_assister_assists = top_ga_total = 0
+    top_scorer = {'name':'', 'goals':0}
+    top_assister = {'name':'', 'assists':0}
 
-    # Calculate stats for each team
     for team in teams:
         players = team.get('players', [])
-        team['goals_for'] = sum(p.get('goals', 0) for p in players)
-
-        # Calculate goals against from matches
+        # compute goals_for, goals_against
+        team['goals_for'] = sum(p.get('goals',0) for p in players)
         team['goals_against'] = sum(
-            m.get('away_score', 0) if team['name'] != m.get('opponent') else m.get('home_score', 0)
-            for m in team.get('matches', [])
+            m.get('away_score',0) if team['name'] != m.get('opponent') else m.get('home_score',0)
+            for m in team.get('matches',[])
         )
-
-        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
-        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
+        # compute points and played dynamically
+        team['wins'] = sum(1 for m in team.get('matches',[]) if (m.get('home_team')==team['name'] and m.get('home_score',0) > m.get('away_score',0)) or
+                            (m.get('away_team')==team['name'] and m.get('away_score',0) > m.get('home_score',0)))
+        team['draws'] = sum(1 for m in team.get('matches',[]) if m.get('home_score',0)==m.get('away_score',0))
+        team['losses'] = sum(1 for m in team.get('matches',[]) if (m.get('home_team')==team['name'] and m.get('home_score',0) < m.get('away_score',0)) or
+                             (m.get('away_team')==team['name'] and m.get('away_score',0) < m.get('home_score',0)))
+        team['points'] = team['wins']*3 + team['draws']
+        team['played'] = team['wins'] + team['draws'] + team['losses']
 
         for p in players:
-            goals = p.get('goals', 0)
-            assists = p.get('assists', 0)
-            ga_total = goals + assists
+            if p.get('goals',0) > top_scorer['goals']:
+                top_scorer = {'name': p['name'], 'goals': p['goals']}
+            if p.get('assists',0) > top_assister['assists']:
+                top_assister = {'name': p['name'], 'assists': p['assists']}
 
-            if goals > top_scorer_goals:
-                top_scorer_goals = goals
-                top_scorer = p['name']
+    teams_sorted = sorted(teams, key=lambda x: (-x['points'], -x['goals_for']))
 
-            if assists > top_assister_assists:
-                top_assister_assists = assists
-                top_assister = p['name']
-
-            if ga_total > top_ga_total:
-                top_ga_total = ga_total
-                top_ga_player = p['name']
-
-    teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('goals_for',0)))
-
-    return render_template('index.html', teams=teams_sorted,
-                           top_scorer=top_scorer,
-                           top_scorer_goals=top_scorer_goals,
-                           top_assister=top_assister,
-                           top_assister_assists=top_assister_assists,
-                           top_ga=top_ga_player,
-                           top_ga_total=top_ga_total)
+    return render_template('index.html',
+                           teams=teams_sorted,
+                           top_scorer=top_scorer['name'],
+                           top_scorer_goals=top_scorer['goals'],
+                           top_assister=top_assister['name'],
+                           top_assister_assists=top_assister['assists'])
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET','POST'])
 def team_page(team_name):
-    team_name = team_name.replace('_', ' ')
+    team_name = team_name.replace('_',' ')
     teams = load_teams()
     team = next((t for t in teams if t['name']==team_name), None)
     if not team:
@@ -104,14 +95,13 @@ def team_page(team_name):
         if not user_name:
             flash("You must enter your name to submit a request.")
             return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
-
         requests = load_requests()
-        new_request = {'id': len(requests)+1, 'user': user_name, 'team_name': team_name, 'type': req_type}
+        new_request = {'id':len(requests)+1, 'user':user_name, 'team_name':team_name, 'type':req_type}
 
         if req_type=='lineup':
             lineup = [n.strip() for n in request.form.getlist('lineup') if n.strip()]
-            new_request['lineup'] = lineup
-            new_request['date'] = request.form.get('lineup_date')
+            new_request['lineup']=lineup
+            new_request['date']=request.form.get('lineup_date')
         elif req_type=='player':
             player_name = request.form.get('player_name')
             player = next((p for p in team.get('players',[]) if p['name']==player_name), None)
@@ -132,12 +122,12 @@ def team_page(team_name):
         flash("Request sent for admin approval!")
         return redirect(url_for('team_page', team_name=team_name.replace(' ','_')))
 
-    return render_template('team.html', team=team, players=team.get('players', []))
+    return render_template('team.html', team=team, players=team.get('players',[]))
 
 # -------------------- Player Page -------------------- #
 @app.route('/team/<team_name>/player/<player_name>', methods=['GET','POST'])
 def player_page(team_name, player_name):
-    team_name = team_name.replace('_', ' ')
+    team_name = team_name.replace('_',' ')
     player_name = player_name.replace('_',' ')
     teams = load_teams()
     team = next((t for t in teams if t['name']==team_name), None)
@@ -145,17 +135,17 @@ def player_page(team_name, player_name):
         return f"Team {team_name} not found!", 404
     player = next((p for p in team.get('players',[]) if p['name']==player_name), None)
     if not player:
-        return f"Player {player_name} not found in {team_name}!", 404
+        return f"Player {player_name} not found!", 404
 
     if request.method=='POST':
         user_name = request.form.get('user_name')
         requests = load_requests()
         new_request = {
-            'id': len(requests)+1,
-            'user': user_name,
-            'team_name': team_name,
-            'type': 'player',
-            'player_name': player_name,
+            'id':len(requests)+1,
+            'user':user_name,
+            'team_name':team_name,
+            'type':'player',
+            'player_name':player_name,
             'goals': int(request.form.get('goals', player.get('goals',0)) or player.get('goals',0)),
             'assists': int(request.form.get('assists', player.get('assists',0)) or player.get('assists',0)),
             'clean_sheets': int(request.form.get('clean_sheets', player.get('clean_sheet',0)) or player.get('clean_sheet',0)),
@@ -202,7 +192,7 @@ def approve_request(request_id):
         return redirect(url_for('admin_requests'))
 
     if req['type']=='lineup':
-        team['lineup'] = req.get('lineup', [])
+        team['lineup']=req.get('lineup',[])
     elif req['type']=='player':
         player = next((p for p in team.get('players',[]) if p['name']==req['player_name']), None)
         if player:
@@ -210,4 +200,21 @@ def approve_request(request_id):
                 'goals': req.get('goals', player.get('goals',0)),
                 'assists': req.get('assists', player.get('assists',0)),
                 'clean_sheet': req.get('clean_sheets', player.get('clean_sheet',0)),
-                'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear', 0))
+                'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear',0))
+            })
+    elif req['type']=='update_stat':
+        stat = req.get('stat')
+        increment = req.get('increment',0)
+        player = next((p for p in team.get('players',[]) if p['name']==req.get('player_name')), None)
+        if player and stat in player:
+            player[stat] += increment
+
+    # remove approved request
+    requests = [r for r in requests if r['id'] != request_id]
+    save_requests(requests)
+    save_teams(teams)
+    flash("Request approved!")
+    return redirect(url_for('admin_requests'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
