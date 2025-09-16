@@ -13,13 +13,14 @@ REQUEST_FILE = 'requests.json'
 def load_teams():
     try:
         with open(TEAM_FILE, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+            return data.get('teams', [])
     except FileNotFoundError:
         return []
 
 def save_teams(teams):
     with open(TEAM_FILE, 'w') as f:
-        json.dump(teams, f, indent=2)
+        json.dump({"teams": teams}, f, indent=2)
 
 def load_requests():
     try:
@@ -59,7 +60,7 @@ def league_table():
 
         # Goals against
         team['goals_against'] = sum(
-            (m.get('away_score',0) if team['name'] != m.get('home_team','') else m.get('home_score',0)) 
+            (m.get('away_score',0) if team['name'] != m.get('home_team','') else m.get('home_score',0))
             for m in matches
         )
 
