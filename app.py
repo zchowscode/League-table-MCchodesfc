@@ -210,4 +210,4 @@ def approve_request(request_id):
                 'goals': req.get('goals', player.get('goals',0)),
                 'assists': req.get('assists', player.get('assists',0)),
                 'clean_sheet': req.get('clean_sheets', player.get('clean_sheet',0)),
-                'goal_line_clear': req.get('goal_line
+                'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear', 0))
