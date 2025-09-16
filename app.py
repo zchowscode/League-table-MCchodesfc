@@ -45,32 +45,31 @@ def login_required(func):
 @app.route('/')
 def league_table():
     teams = load_teams()
-    top_scorer = top_assister = top_ga_player = None
-    top_scorer_goals = top_assister_assists = top_ga_total = None
-    max_goals = max_assists = max_ga = -1
 
+    # Aggregate player stats across all teams
+    player_totals = {}
     for team in teams:
-        # Calculate points and played
-        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
-        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
-        # Correct goals_for and goals_against
-        team['goals_for'] = sum(p.get('goals', 0) for p in team.get('players', []))
-        team['goals_against'] = sum(p.get('goal_line_clear', 0) for p in team.get('players', []))
+        team['points'] = team.get('wins',0)*3 + team.get('draws',0)
+        team['played'] = team.get('wins',0) + team.get('draws',0) + team.get('losses',0)
+        team['goals_for'] = sum(p.get('goals',0) for p in team.get('players',[]))
+        team['goals_against'] = sum(p.get('goal_line_clear',0) for p in team.get('players',[]))  # optional
 
         for p in team.get('players', []):
-            if p.get('goals',0) > max_goals:
-                max_goals = p['goals']
-                top_scorer = p['name']
-                top_scorer_goals = p['goals']
-            if p.get('assists',0) > max_assists:
-                max_assists = p['assists']
-                top_assister = p['name']
-                top_assister_assists = p['assists']
-            ga = p.get('goals',0) + p.get('assists',0)
-            if ga > max_ga:
-                max_ga = ga
-                top_ga_player = p['name']
-                top_ga_total = ga
+            if p['name'] not in player_totals:
+                player_totals[p['name']] = {'goals':0,'assists':0,'ga':0}
+            player_totals[p['name']]['goals'] += p.get('goals',0)
+            player_totals[p['name']]['assists'] += p.get('assists',0)
+            player_totals[p['name']]['ga'] += p.get('goals',0) + p.get('assists',0)
+
+    # Determine top scorer, top assister, top GA
+    top_scorer = max(player_totals.items(), key=lambda x: x[1]['goals'])[0]
+    top_scorer_goals = player_totals[top_scorer]['goals']
+
+    top_assister = max(player_totals.items(), key=lambda x: x[1]['assists'])[0]
+    top_assister_assists = player_totals[top_assister]['assists']
+
+    top_ga = max(player_totals.items(), key=lambda x: x[1]['ga'])[0]
+    top_ga_total = player_totals[top_ga]['ga']
 
     teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('wins',0)))
 
@@ -79,7 +78,7 @@ def league_table():
                            top_scorer_goals=top_scorer_goals,
                            top_assister=top_assister,
                            top_assister_assists=top_assister_assists,
-                           top_ga=top_ga_player,
+                           top_ga=top_ga,
                            top_ga_total=top_ga_total)
 
 # -------------------- Team Page -------------------- #
