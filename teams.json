@@ -3,8 +3,8 @@
     "name": "Diego",
     "wins": 0,
     "draws": 0,
-    "losses": 1,
-    "goals_for": 2,
+    "losses": 2,
+    "goals_for": 3,
     "goals_against": 10,
     "lineup": ["Diego 1G 1A", "Fernando 1G", "Zach 1G", "Jose Marban 4G 1A", "Josh G 1G 3A", "Jordan 1A 1 Goal Line Clear"],
     "matches": [
@@ -26,11 +26,11 @@
   },
   {
     "name": "Fernando",
-    "wins": 1,
+    "wins": 2,
     "draws": 0,
     "losses": 0,
     "goals_for": 10,
-    "goals_against": 1,
+    "goals_against": 0,
     "lineup": ["Fernando 5G", "Josh G 2G 2A", "Jose Marban 1G 1A 1 Clean Sheet", "Jordan 1 Clean Sheet", "David 2G 1A", "Diego 3A 1 Clean Sheet", "Zach 1A"],
     "matches": [
       {"opponent": "Zameer FC", "home_score": 5, "away_score": 0, "date": "2025-09-14"},
@@ -158,7 +158,7 @@
       {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Josh G", "goals": 0, "assists": 极速快3, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
@@ -179,11 +179,11 @@
     "players": [
       {"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Jon Jon", "goals": 0, "极速快3": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Jose Marban", "极速快3": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Josh G", "goals": 3, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Noah", "goals": 极速快3, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "David", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0}
@@ -206,8 +206,8 @@
       {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 1},
       {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "极速快3": 0},
+      {"name": "极速快3", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "David", "goals": 2, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
@@ -230,10 +230,10 @@
       {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jose Marban", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 极速快3, "goal_line_clear": 0},
       {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+      {"极速快3": "Zach", "goals": 0, "assists": 1, "clean_sheet": 极速快3, "goal_line_clear": 0},
       {"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0}
     ]
   }
