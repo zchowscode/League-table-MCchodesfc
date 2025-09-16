@@ -53,9 +53,9 @@ def league_table():
         # Calculate points and played
         team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
         team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
-        # Calculate goals_for and goals_against from players
-        team['goals_for'] = sum(p.get('goals',0) for p in team.get('players', []))
-        team['goals_against'] = sum(p.get('goal_line_clearances',0) for p in team.get('players', []))  # Or adjust as needed
+        # Correct goals_for and goals_against
+        team['goals_for'] = sum(p.get('goals', 0) for p in team.get('players', []))
+        team['goals_against'] = sum(p.get('goal_line_clear', 0) for p in team.get('players', []))
 
         for p in team.get('players', []):
             if p.get('goals',0) > max_goals:
@@ -114,7 +114,7 @@ def team_page(team_name):
                     'goals': int(request.form.get('goals',0) or 0),
                     'assists': int(request.form.get('assists',0) or 0),
                     'clean_sheets': int(request.form.get('clean_sheets',0) or 0),
-                    'goal_line_clearances': int(request.form.get('goal_line_clearances',0) or 0)
+                    'goal_line_clear': int(request.form.get('goal_line_clear',0) or 0)
                 })
         elif req_type=='update_stat':
             new_request['stat'] = request.form.get('stat')
@@ -152,7 +152,7 @@ def player_page(team_name, player_name):
             'goals': int(request.form.get('goals', player.get('goals',0)) or player.get('goals',0)),
             'assists': int(request.form.get('assists', player.get('assists',0)) or player.get('assists',0)),
             'clean_sheets': int(request.form.get('clean_sheets', player.get('clean_sheets',0)) or player.get('clean_sheets',0)),
-            'goal_line_clearances': int(request.form.get('goal_line_clearances', player.get('goal_line_clearances',0)) or player.get('goal_line_clearances',0))
+            'goal_line_clear': int(request.form.get('goal_line_clear', player.get('goal_line_clear',0)) or player.get('goal_line_clear',0))
         }
         requests.append(new_request)
         save_requests(requests)
@@ -203,7 +203,7 @@ def approve_request(request_id):
                 'goals': req.get('goals', player.get('goals',0)),
                 'assists': req.get('assists', player.get('assists',0)),
                 'clean_sheets': req.get('clean_sheets', player.get('clean_sheets',0)),
-                'goal_line_clearances': req.get('goal_line_clearances', player.get('goal_line_clearances',0))
+                'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear',0))
             })
     elif req['type']=='update_stat':
         stat = req.get('stat')
