@@ -163,9 +163,8 @@
       {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  },
-[
+   }
+  ,
   {
     "name": "Jon Jon FC",
     "wins": 0,
