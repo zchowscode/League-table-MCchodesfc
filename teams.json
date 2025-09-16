@@ -90,9 +90,9 @@
       {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Diego", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Josh G 2", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
       {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
     ]
   },
   {
@@ -197,4 +197,16 @@
     "lineup": [],
     "matches": [],
     "players": [
-      {"name": "Jose Marban", "goals":
+      {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Fernando", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+      {"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+    ]
+  }
+]
