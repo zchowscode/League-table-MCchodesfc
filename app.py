@@ -47,33 +47,39 @@ def league_table():
     teams = load_teams()
     top_scorer = top_assister = top_ga_player = None
     top_scorer_goals = top_assister_assists = top_ga_total = 0
-    max_goals = max_assists = max_ga = 0
 
+    # Calculate stats for each team
     for team in teams:
-        players = team.get('players') or []
-        team['points'] = (team.get('wins') or 0)*3 + (team.get('draws') or 0)
-        team['played'] = (team.get('wins') or 0) + (team.get('draws') or 0) + (team.get('losses') or 0)
-        team['goals_for'] = sum((p.get('goals') or 0) for p in players)
-        team['goals_against'] = sum((p.get('goals_against') or 0) for p in players)  # optional if you store GA per player
+        players = team.get('players', [])
+        team['goals_for'] = sum(p.get('goals', 0) for p in players)
+
+        # Calculate goals against from matches
+        team['goals_against'] = sum(
+            m.get('away_score', 0) if team['name'] != m.get('opponent') else m.get('home_score', 0)
+            for m in team.get('matches', [])
+        )
+
+        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
+        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
 
         for p in players:
-            goals = p.get('goals') or 0
-            assists = p.get('assists') or 0
-            ga = goals + assists
-            if goals > max_goals:
-                max_goals = goals
-                top_scorer = p['name']
-                top_scorer_goals = goals
-            if assists > max_assists:
-                max_assists = assists
-                top_assister = p['name']
-                top_assister_assists = assists
-            if ga > max_ga:
-                max_ga = ga
-                top_ga_player = p['name']
-                top_ga_total = ga
+            goals = p.get('goals', 0)
+            assists = p.get('assists', 0)
+            ga_total = goals + assists
 
-    teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('wins',0)))
+            if goals > top_scorer_goals:
+                top_scorer_goals = goals
+                top_scorer = p['name']
+
+            if assists > top_assister_assists:
+                top_assister_assists = assists
+                top_assister = p['name']
+
+            if ga_total > top_ga_total:
+                top_ga_total = ga_total
+                top_ga_player = p['name']
+
+    teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('goals_for',0)))
 
     return render_template('index.html', teams=teams_sorted,
                            top_scorer=top_scorer,
@@ -152,7 +158,7 @@ def player_page(team_name, player_name):
             'player_name': player_name,
             'goals': int(request.form.get('goals', player.get('goals',0)) or player.get('goals',0)),
             'assists': int(request.form.get('assists', player.get('assists',0)) or player.get('assists',0)),
-            'clean_sheets': int(request.form.get('clean_sheets', player.get('clean_sheets',0)) or player.get('clean_sheets',0)),
+            'clean_sheets': int(request.form.get('clean_sheets', player.get('clean_sheet',0)) or player.get('clean_sheet',0)),
             'goal_line_clear': int(request.form.get('goal_line_clear', player.get('goal_line_clear',0)) or player.get('goal_line_clear',0))
         }
         requests.append(new_request)
@@ -203,29 +209,5 @@ def approve_request(request_id):
             player.update({
                 'goals': req.get('goals', player.get('goals',0)),
                 'assists': req.get('assists', player.get('assists',0)),
-                'clean_sheets': req.get('clean_sheets', player.get('clean_sheets',0)),
-                'goal_line_clear': req.get('goal_line_clear', player.get('goal_line_clear',0))
-            })
-    elif req['type']=='update_stat':
-        stat = req.get('stat')
-        increment = req.get('increment',0)
-        if stat in ['played','wins','draws','losses']:
-            team[stat] = team.get(stat,0) + increment
-            team['points'] = team.get('wins',0)*3 + team.get('draws',0)
-
-    requests = [r for r in requests if r['id'] != request_id]
-    save_teams(teams)
-    save_requests(requests)
-    flash("Request approved and applied!")
-    return redirect(url_for('admin_requests'))
-
-@app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
-@login_required
-def deny_request(request_id):
-    requests = [r for r in load_requests() if r['id'] != request_id]
-    save_requests(requests)
-    flash("Request denied!")
-    return redirect(url_for('admin_requests'))
-
-if __name__=="__main__":
-    app.run(debug=True)
+                'clean_sheet': req.get('clean_sheets', player.get('clean_sheet',0)),
+                'goal_line_clear': req.get('goal_line
