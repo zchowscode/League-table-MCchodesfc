@@ -45,40 +45,43 @@ def login_required(func):
 @app.route('/')
 def league_table():
     teams = load_teams()
+    top_scorer = top_assister = top_ga_player = None
+    top_scorer_goals = top_assister_assists = top_ga_total = 0
+    max_goals = max_assists = max_ga = 0
 
-    # Aggregate player stats across all teams
-    player_stats = {}
     for team in teams:
-        for p in team.get('players', []):
-            name = p['name']
-            if name not in player_stats:
-                player_stats[name] = {'goals': 0, 'assists': 0, 'ga': 0}
-            player_stats[name]['goals'] += p.get('goals', 0)
-            player_stats[name]['assists'] += p.get('assists', 0)
-            player_stats[name]['ga'] += p.get('goals', 0) + p.get('assists', 0)
+        players = team.get('players') or []
+        team['points'] = (team.get('wins') or 0)*3 + (team.get('draws') or 0)
+        team['played'] = (team.get('wins') or 0) + (team.get('draws') or 0) + (team.get('losses') or 0)
+        team['goals_for'] = sum((p.get('goals') or 0) for p in players)
+        team['goals_against'] = sum((p.get('goals_against') or 0) for p in players)  # optional if you store GA per player
 
-    # Determine top scorer, top assister, top GA
-    top_scorer = max(player_stats.items(), key=lambda x: x[1]['goals'], default=(None, {'goals': 0}))
-    top_assister = max(player_stats.items(), key=lambda x: x[1]['assists'], default=(None, {'assists': 0}))
-    top_ga = max(player_stats.items(), key=lambda x: x[1]['ga'], default=(None, {'ga': 0}))
-
-    # Calculate team stats
-    for team in teams:
-        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
-        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
-        team['goals_for'] = sum(p.get('goals', 0) for p in team.get('players', []))
-        team['goals_against'] = sum(p.get('goal_line_clear', 0) for p in team.get('players', []))
+        for p in players:
+            goals = p.get('goals') or 0
+            assists = p.get('assists') or 0
+            ga = goals + assists
+            if goals > max_goals:
+                max_goals = goals
+                top_scorer = p['name']
+                top_scorer_goals = goals
+            if assists > max_assists:
+                max_assists = assists
+                top_assister = p['name']
+                top_assister_assists = assists
+            if ga > max_ga:
+                max_ga = ga
+                top_ga_player = p['name']
+                top_ga_total = ga
 
     teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('wins',0)))
 
-    return render_template('index.html',
-                           teams=teams_sorted,
-                           top_scorer=top_scorer[0],
-                           top_scorer_goals=top_scorer[1]['goals'],
-                           top_assister=top_assister[0],
-                           top_assister_assists=top_assister[1]['assists'],
-                           top_ga=top_ga[0],
-                           top_ga_total=top_ga[1]['ga'])
+    return render_template('index.html', teams=teams_sorted,
+                           top_scorer=top_scorer,
+                           top_scorer_goals=top_scorer_goals,
+                           top_assister=top_assister,
+                           top_assister_assists=top_assister_assists,
+                           top_ga=top_ga_player,
+                           top_ga_total=top_ga_total)
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET','POST'])
@@ -219,8 +222,7 @@ def approve_request(request_id):
 @app.route('/admin/requests/deny/<int:request_id>', methods=['POST'])
 @login_required
 def deny_request(request_id):
-    requests = load_requests()
-    requests = [r for r in requests if r['id'] != request_id]
+    requests = [r for r in load_requests() if r['id'] != request_id]
     save_requests(requests)
     flash("Request denied!")
     return redirect(url_for('admin_requests'))
