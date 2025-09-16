@@ -1,121 +1,240 @@
-[
-  {
-    "name": "Jordan FC",
-    "wins": 1,
-    "draws": 0,
-    "losses": 0,
-    "goals_for": 5,
-    "goals_against": 0,
-    "lineup": ["Josh G 2G 2A", "Fernando 2G", "Jose Marban 1G 1A 1CS", "Jordan 1CS"],
-    "matches": [
-      {"opponent": "Zameer FC", "home_score": 5, "away_score": 0, "date": "2025-09-14"}
-    ],
-    "players": [
-      {"name": "Josh G", "goals": 2, "assists": 2, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Fernando", "goals": 2, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 1, "assists": 1, "clean_sheet": 1, "goal_line_clear": 0},
-      {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 1, "goal_line_clear": 0},
-      {"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  },
-  {
-    "name": "Josh FC",
-    "wins": 1,
-    "draws": 0,
-    "losses": 0,
-    "goals_for": 5,
-    "goals_against": 1,
-    "lineup": ["Josh G 3G 1A", "Jose Marban 4G 1A", "Jordan 1A 1GLC", "Diego 1G", "Fernando 1G", "Zach 1G"],
-    "matches": [
-      {"opponent": "Diego FC", "home_score": 5, "away_score": 1, "date": "2025-09-14"}
-    ],
-    "players": [
-      {"name": "Josh G", "goals": 3, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 4, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jordan", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 1},
-      {"name": "Diego", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zach", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "David", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  },
-  {
-    "name": "Nando FC",
-    "wins": 1,
-    "draws": 0,
-    "losses": 0,
-    "goals_for": 5,
-    "goals_against": 0,
-    "lineup": ["Fernando 3G", "David 2G 1A", "Jordan 1GLC", "Josh G 1A", "Diego 3A 1CS"],
-    "matches": [
-      {"opponent": "Zach FC", "home_score": 5, "away_score": 0, "date": "2025-09-14"}
-    ],
-    "players": [
-      {"name": "Fernando", "goals": 3, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "David", "goals": 2, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 1},
-      {"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Diego", "goals": 0, "assists": 3, "clean_sheet": 1, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  },
-  {
-    "name": "David FC",
-    "wins": 1,
-    "draws": 0,
-    "losses": 0,
-    "goals_for": 5,
-    "goals_against": 2,
-    "lineup": ["David 1G 1A", "Josh G 3G 1A", "Zameer 1G 1A", "Fernando 1G", "Zach 1A"],
-    "matches": [
-      {"opponent": "Jose FC", "home_score": 5, "away_score": 2, "date": "2025-09-14"}
-    ],
-    "players": [
-      {"name": "David", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Josh G", "goals": 3, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Diego", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  },
-  {
-    "name": "Zach FC",
-    "wins": 0,
-    "draws": 0,
-    "losses": 1,
-    "goals_for": 0,
-    "goals_against": 5,
-    "lineup": ["Zach 1A", "Jordan 1GLC", "David 2G 1A", "Fernando 3G", "Josh G 1A", "Diego 3A 1CS"],
-    "matches": [
-      {"opponent": "Nando FC", "home_score": 0, "away_score": 5, "date": "2025-09-14"}
-    ],
-    "players": [
-      {"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 1},
-      {"name": "David", "goals": 2, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Fernando", "goals": 3, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Diego", "goals": 0, "assists": 3, "clean_sheet": 1, "goal_line_clear": 0},
-      {"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
-      {"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
-    ]
-  }
+{
+"teams": [
+{
+"name": "Jordan FC",
+"wins": 1,
+"draws": 0,
+"losses": 0,
+"goals_for": 5,
+"goals_against": 0,
+"lineup": ["Josh G 2G 2A", "Fernando 2G", "Jose Marban 1G 1A 1 Clean Sheet", "Jordan 1 Clean Sheet"],
+"matches": [
+{"opponent": "Zameer FC", "home_score": 5, "away_score": 0, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Josh G", "goals": 2, "assists": 2, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 2, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 1, "assists": 1, "clean_sheet": 1, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 1, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
 ]
+},
+{
+"name": "Josh FC",
+"wins": 1,
+"draws": 0,
+"losses": 0,
+"goals_for": 5,
+"goals_against": 1,
+"lineup": ["Josh G 3G 1A", "Jose Marban 4G 1A", "Jordan 1A 1 Goal Line Clear", "Diego 1G", "Fernando 1G", "Zach 1G"],
+"matches": [
+{"opponent": "Diego FC", "home_score": 5, "away_score": 1, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Josh G", "goals": 3, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 4, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 1},
+{"name": "Diego", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Nando FC",
+"wins": 1,
+"draws": 0,
+"losses": 0,
+"goals_for": 5,
+"goals_against": 0,
+"lineup": ["Fernando 3G", "David 2G 1A", "Jordan 1 Goal Line Clear", "Josh 1A", "Diego 3A 1 Clean Sheet"],
+"matches": [
+{"opponent": "Zach FC", "home_score": 5, "away_score": 0, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Fernando", "goals": 3, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 2, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 1},
+{"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 3, "clean_sheet": 1, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "David FC",
+"wins": 1,
+"draws": 0,
+"losses": 0,
+"goals_for": 5,
+"goals_against": 2,
+"lineup": ["David 1G 1A", "Josh G 3G 1A", "Zameer 1G 1A", "Fernando 1G", "Zach 1A"],
+"matches": [
+{"opponent": "Jose FC", "home_score": 5, "away_score": 2, "date": "2025-09-14"}
+],
+"players": [
+{"name": "David", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 3, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Zach FC",
+"wins": 0,
+"draws": 0,
+"losses": 1,
+"goals_for": 0,
+"goals_against": 5,
+"lineup": ["Zach 1A", "Jordan 1 Goal Line Clear", "David 2G 1A", "Fernando 3G", "Josh 1A", "Diego 3A 1 Clean Sheet"],
+"matches": [
+{"opponent": "Nando FC", "home_score": 0, "away_score": 5, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 1},
+{"name": "David", "goals": 2, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 3, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 3, "clean_sheet": 1, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Zameer FC",
+"wins": 0,
+"draws": 0,
+"losses": 1,
+"goals_for": 0,
+"goals_against": 5,
+"lineup": ["Zameer 1G 1A", "Jose 1G", "Fernando 1G", "Zach 1A"],
+"matches": [
+{"opponent": "Jordan FC", "home_score": 0, "away_score": 5, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 1, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Noah FC",
+"wins": 0,
+"draws": 0,
+"losses": 0,
+"goals_for": 0,
+"goals_against": 0,
+"lineup": [],
+"matches": [],
+"players": [
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Jon Jon FC",
+"wins": 0,
+"draws": 0,
+"losses": 0,
+"goals_for": 0,
+"goals_against": 0,
+"lineup": [],
+"matches": [],
+"players": [
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Jose FC",
+"wins": 0,
+"draws": 0,
+"losses": 1,
+"goals_for": 2,
+"goals_against": 5,
+"lineup": ["Jose Marban", "Jon Jon", "Zameer", "Noah", "Diego", "Fernando", "Jordan", "Josh G", "David", "Zach"],
+"matches": [
+{"opponent": "David FC", "home_score": 2, "away_score": 5, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 1, "assists": 1, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assits": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+},
+{
+"name": "Diego FC",
+"wins": 0,
+"draws": 0,
+"losses": 1,
+"goals_for": 1,
+"goals_against": 5,
+"lineup": ["Diego", "Fernando", "Jordan", "Josh G", "Jose Marban", "David", "Zach", "Noah", "Zameer", "Jon Jon"],
+"matches": [
+{"opponent": "Josh FC", "home_score": 1, "away_score": 5, "date": "2025-09-14"}
+],
+"players": [
+{"name": "Diego", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Fernando", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jordan", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Josh G", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jose Marban", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "David", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zach", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Noah", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Zameer", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0},
+{"name": "Jon Jon", "goals": 0, "assists": 0, "clean_sheet": 0, "goal_line_clear": 0}
+]
+}
+]
+}
