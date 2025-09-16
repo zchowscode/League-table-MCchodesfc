@@ -45,30 +45,42 @@ def login_required(func):
 @app.route('/')
 def league_table():
     teams = load_teams()
-    for t in teams:
-        t['points'] = t.get('wins',0)*3 + t.get('draws',0)
-
-    # Top stats
-    top_scorer = top_assister = top_ga = None
+    top_scorer = top_assister = top_ga_player = None
+    top_scorer_goals = top_assister_assists = top_ga_total = None
     max_goals = max_assists = max_ga = -1
 
-    for t in teams:
-        for p in t.get('players', []):
-            if p['goals'] > max_goals:
+    for team in teams:
+        # Calculate points and played
+        team['points'] = team.get('wins', 0)*3 + team.get('draws', 0)
+        team['played'] = team.get('wins', 0) + team.get('draws', 0) + team.get('losses', 0)
+        # Calculate goals_for and goals_against from players
+        team['goals_for'] = sum(p.get('goals',0) for p in team.get('players', []))
+        team['goals_against'] = sum(p.get('goal_line_clearances',0) for p in team.get('players', []))  # Or adjust as needed
+
+        for p in team.get('players', []):
+            if p.get('goals',0) > max_goals:
                 max_goals = p['goals']
                 top_scorer = p['name']
-            if p['assists'] > max_assists:
+                top_scorer_goals = p['goals']
+            if p.get('assists',0) > max_assists:
                 max_assists = p['assists']
                 top_assister = p['name']
-            ga = p['goals'] + p['assists']
+                top_assister_assists = p['assists']
+            ga = p.get('goals',0) + p.get('assists',0)
             if ga > max_ga:
                 max_ga = ga
-                top_ga = p['name']
+                top_ga_player = p['name']
+                top_ga_total = ga
 
     teams_sorted = sorted(teams, key=lambda x: (-x.get('points',0), -x.get('wins',0)))
 
     return render_template('index.html', teams=teams_sorted,
-                           top_scorer=top_scorer, top_assister=top_assister, top_ga=top_ga)
+                           top_scorer=top_scorer,
+                           top_scorer_goals=top_scorer_goals,
+                           top_assister=top_assister,
+                           top_assister_assists=top_assister_assists,
+                           top_ga=top_ga_player,
+                           top_ga_total=top_ga_total)
 
 # -------------------- Team Page -------------------- #
 @app.route('/team/<team_name>', methods=['GET','POST'])
